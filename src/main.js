@@ -14,7 +14,7 @@ import { ITEMS } from './data/items.js';
 import { canvas, gameWrap, screens } from './dom.js';
 import { openCompendium, renderChangelog, renderCompendium, renderStats } from './render/compendium.js';
 import { logEvent, renderPauseStats } from './render/hud.js';
-import { applyBrightness, applyUIScale, checkDesktop, refreshMenu, showScreen, updateSettingButtons } from './render/screens.js';
+import { applyUIScale, checkDesktop, refreshMenu, showScreen, updateSettingButtons } from './render/screens.js';
 import { renderShop } from './render/shop.js';
 import { computeScore } from './state/derived.js';
 import { store } from './state/store.js';
@@ -104,12 +104,6 @@ document.querySelectorAll('.toggle-opt[data-uiscale]').forEach(btn => btn.addEve
   updateSettingButtons();
   saveJSON(STORE_SETTINGS, store.settings);
 }));
-document.querySelectorAll('.toggle-opt[data-brightness]').forEach(btn => btn.addEventListener('click', () => {
-  store.settings.brightness = btn.dataset.brightness;
-  applyBrightness(store.settings.brightness);
-  updateSettingButtons();
-  saveJSON(STORE_SETTINGS, store.settings);
-}));
 document.querySelectorAll('.toggle-opt[data-toggle]').forEach(btn => btn.addEventListener('click', () => {
   const key = btn.dataset.toggle;
   const val = btn.dataset.val === 'true';
@@ -190,12 +184,11 @@ window.addEventListener('resize', checkDesktop);
 export async function boot(){
   checkDesktop();
   document.getElementById('versionTag').innerHTML = 'v'+GAME_VERSION+' &middot; changelog';
-  store.settings = Object.assign({fps:60,musicOn:true,sfxOn:true,uiSize:'medium',showFps:false,vsyncOn:true,brightness:'dark'}, await loadJSON(STORE_SETTINGS, {}));
+  store.settings = Object.assign({fps:60,musicOn:true,sfxOn:true,uiSize:'medium',showFps:false,vsyncOn:true}, await loadJSON(STORE_SETTINGS, {}));
   store.stats = Object.assign({runs:0,bestWave:0,bestScore:0,totalKills:0,totalGold:0,totalTime:0,victories:0,itemPurchaseCounts:{}}, await loadJSON(STORE_STATS, {}));
   store.compendium = Object.assign({items:[],enemies:[],events:[],achievements:[]}, await loadJSON(STORE_COMPENDIUM, {}));
   store.runHistory = await loadJSON(STORE_HISTORY, []);
   applyUIScale(store.settings.uiSize);
-  applyBrightness(store.settings.brightness);
   document.getElementById('fpsCounter').classList.toggle('hidden', !store.settings.showFps);
   updateSettingButtons();
   refreshMenu();

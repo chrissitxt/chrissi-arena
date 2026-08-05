@@ -3,7 +3,7 @@
 // automatic localStorage persistence in storage.js.
 
 import { GAME_VERSION } from '../data/constants.js';
-import { applyBrightness, applyUIScale, refreshMenu, updateSettingButtons } from '../render/screens.js';
+import { applyUIScale, refreshMenu, updateSettingButtons } from '../render/screens.js';
 import { store } from '../state/store.js';
 import { STORE_COMPENDIUM, STORE_HISTORY, STORE_SETTINGS, STORE_STATS, saveJSON } from '../storage.js';
 
@@ -22,14 +22,14 @@ export function importSaveFile(file){
     try {
       const data = JSON.parse(reader.result);
       if (data.settings){
-        store.settings = Object.assign({fps:60,musicOn:true,sfxOn:true,uiSize:'medium',showFps:false,vsyncOn:true,brightness:'dark'}, data.settings);
+        store.settings = Object.assign({fps:60,musicOn:true,sfxOn:true,uiSize:'medium',showFps:false,vsyncOn:true}, data.settings);
       }
       if (data.stats) store.stats = Object.assign({runs:0,bestWave:0,bestScore:0,totalKills:0,totalGold:0,totalTime:0,victories:0,itemPurchaseCounts:{}}, data.stats);
       if (data.compendium) store.compendium = Object.assign({items:[],enemies:[],events:[],achievements:[]}, data.compendium);
       if (Array.isArray(data.runHistory)) store.runHistory = data.runHistory.slice(0,5);
       await saveJSON(STORE_SETTINGS,store.settings); await saveJSON(STORE_STATS,store.stats);
       await saveJSON(STORE_COMPENDIUM,store.compendium); await saveJSON(STORE_HISTORY,store.runHistory);
-      updateSettingButtons(); applyUIScale(store.settings.uiSize); applyBrightness(store.settings.brightness);
+      updateSettingButtons(); applyUIScale(store.settings.uiSize);
       document.getElementById('fpsCounter').classList.toggle('hidden', !store.settings.showFps);
       refreshMenu();
       alert('Save imported successfully.');

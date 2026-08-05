@@ -13,10 +13,10 @@ export function fmtPct(v) {
 
 /** Seconds a regular wave lasts, before enemies stop spawning and it clears. */
 export function waveDurationFor(wave) {
-  return Math.min(24 + wave * 1.4, 52);
+  return Math.min(26 + wave * 1.5, 58);
 }
 
 /** Seconds between regular-enemy spawns during a wave. */
 export function spawnIntervalFor(wave) {
-  return Math.max(0.27, 1.25 - wave * 0.025);
+  return Math.max(0.22, 1.2 - wave * 0.03);
 }

@@ -38,12 +38,12 @@ describe('waveDurationFor', () => {
       prev = d;
     }
   });
-  it('is capped at 52 seconds', () => {
-    expect(waveDurationFor(100)).toBe(52);
-    expect(waveDurationFor(1000)).toBe(52);
+  it('is capped at 58 seconds', () => {
+    expect(waveDurationFor(100)).toBe(58);
+    expect(waveDurationFor(1000)).toBe(58);
   });
   it('starts at wave 1 below the cap', () => {
-    expect(waveDurationFor(1)).toBeCloseTo(25.4, 5);
+    expect(waveDurationFor(1)).toBeCloseTo(27.5, 5);
   });
 });
 
@@ -51,7 +51,7 @@ describe('spawnIntervalFor', () => {
   it('gets shorter (harder) as waves progress', () => {
     expect(spawnIntervalFor(20)).toBeLessThan(spawnIntervalFor(1));
   });
-  it('never goes below the floor of 0.27s', () => {
-    expect(spawnIntervalFor(1000)).toBe(0.27);
+  it('never goes below the floor of 0.22s', () => {
+    expect(spawnIntervalFor(1000)).toBe(0.22);
   });
 });

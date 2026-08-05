@@ -23,7 +23,7 @@ import { clamp } from '../utils.js';
 
 export function unlockEnemy(id){ if (!store.compendium.enemies.includes(id)){ store.compendium.enemies.push(id); saveJSON(STORE_COMPENDIUM, store.compendium); } }
 export function spawnRegular(type, xOverride, yOverride){
-  const scale = 1 + (store.game.wave-1)*0.15;
+  const scale = 1 + (store.game.wave-1)*0.19;
   let x,y;
   if (xOverride!=null){ x=clamp(xOverride,20,ARENA_W-20); y=clamp(yOverride,20,ARENA_H-20); }
   else {
@@ -44,7 +44,7 @@ export function spawnRegular(type, xOverride, yOverride){
   unlockEnemy(type.id);
 }
 export function spawnBoss(def, loop){
-  const scale = 1 + loop*0.35;
+  const scale = 1 + loop*0.45;
   store.game.enemies.push({
     id:def.id, name:def.name, x:ARENA_W/2, y:70, radius:def.radius, color:def.color, shape:def.shape,
     hp:Math.round(def.hp*scale), maxHp:Math.round(def.hp*scale), speed:def.speed,
@@ -72,7 +72,7 @@ export function spawnEnemy(){
     store.game.bossSpawned = true;
     return;
   }
-  if (store.game.enemies.length >= 40) return;
+  if (store.game.enemies.length >= 46) return;
   const pool = ENEMY_TYPES.filter(e=>!e.boss && e.minWave<=wave);
   if (pool.length===0) return;
   const type = pool[Math.floor(Math.random()*pool.length)];
@@ -135,7 +135,7 @@ export function handleBossBehavior(e, dt, spd){
     e.spitTimer = (e.spitTimer==null?2.5:e.spitTimer) - dt;
     if (e.spitTimer<=0 && dist<450){ e.spitTimer=2.3; fireAtPlayer(e,190); }
     e.summonTimer = (e.summonTimer==null?6:e.summonTimer) - dt;
-    if (e.summonTimer<=0 && store.game.enemies.length<40){ e.summonTimer=6; summonAdds(e,'swarmling',2); }
+    if (e.summonTimer<=0 && store.game.enemies.length<46){ e.summonTimer=6; summonAdds(e,'swarmling',2); }
   } else {
     const ang = Math.atan2(p.y-e.y,p.x-e.x);
     e.x += Math.cos(ang)*spd*dt; e.y += Math.sin(ang)*spd*dt;
@@ -157,7 +157,7 @@ export function handleBossBehavior(e, dt, spd){
   }
   if (e.id==='finalboss'){
     e.summonTimer2 = (e.summonTimer2==null?8:e.summonTimer2) - dt;
-    if (e.summonTimer2<=0 && store.game.enemies.length<40){ e.summonTimer2=8; summonAdds(e,'shambler',2); summonAdds(e,'sprinter',1); }
+    if (e.summonTimer2<=0 && store.game.enemies.length<46){ e.summonTimer2=8; summonAdds(e,'shambler',2); summonAdds(e,'sprinter',1); }
   }
 }
 export function updateEnemies(dt){
@@ -207,7 +207,7 @@ export function killEnemy(e){
   }
   spawnDeathBurst(e.x,e.y,e.color, e.boss?26:9);
   sfxEnemyDeath();
-  if (e.splitsInto && store.game.enemies.length<40){
+  if (e.splitsInto && store.game.enemies.length<46){
     const childType = ENEMY_TYPES.find(t=>t.id===e.splitsInto);
     if (childType){
       for (let i=0;i<(e.splitCount||2);i++){

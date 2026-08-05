@@ -27,7 +27,7 @@ export function pickRarity(excludeLegendary){
 }
 export function priceFor(item){
   const ownedCount = store.game.ownedItems.filter(i=>i.item.id===item.id).length;
-  return Math.round(item.price * Math.pow(1.25, ownedCount));
+  return Math.round(item.price * Math.pow(1.3, ownedCount));
 }
 export function pickItemForRarity(rarity){
   if (rarity==='legendary'){

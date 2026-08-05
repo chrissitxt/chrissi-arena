@@ -15,12 +15,12 @@ describe('priceFor (per-copy stacking)', () => {
     expect(priceFor(dagger)).toBe(dagger.price);
   });
 
-  it('increases by the 1.25x stacking multiplier per owned copy', () => {
+  it('increases by the 1.3x stacking multiplier per owned copy', () => {
     const dagger = ITEMS.find(i => i.id === 'dagger');
     store.game.ownedItems.push({ item: dagger, cost: dagger.price });
-    expect(priceFor(dagger)).toBe(Math.round(dagger.price * 1.25));
+    expect(priceFor(dagger)).toBe(Math.round(dagger.price * 1.3));
     store.game.ownedItems.push({ item: dagger, cost: 99 });
-    expect(priceFor(dagger)).toBe(Math.round(dagger.price * 1.25 * 1.25));
+    expect(priceFor(dagger)).toBe(Math.round(dagger.price * 1.3 * 1.3));
   });
 
   it('only counts copies of the SAME item, not other items owned', () => {

@@ -19,7 +19,7 @@
 
 export const store = {
   // Persisted (see storage.js) — user settings, lifetime stats, unlocks
-  settings: { fps: 60, musicOn: true, sfxOn: true, uiSize: 'medium', showFps: false, vsyncOn: true, brightness: 'dark' },
+  settings: { fps: 60, musicOn: true, sfxOn: true, uiSize: 'medium', showFps: false, vsyncOn: true },
   stats: { runs: 0, bestWave: 0, bestScore: 0, totalKills: 0, totalGold: 0, totalTime: 0, victories: 0, itemPurchaseCounts: {} },
   compendium: { items: [], enemies: [], events: [], achievements: [] },
   runHistory: [],
