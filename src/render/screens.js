@@ -8,8 +8,6 @@ import { gameWrap, screens } from '../dom.js';
 import { renderPauseStats } from './hud.js';
 import { store } from '../state/store.js';
 
-let currentUIScale = 1;
-
 export function showScreen(name){
   Object.values(screens).forEach(s => s.classList.add('hidden'));
   gameWrap.classList.add('hidden');
@@ -27,7 +25,7 @@ export function refreshMenu(){
 export function applyUIScale(size){
   const map = { small:0.85, medium:1, large:1.16 };
   const s = map[size]||1;
-  currentUIScale = s;
+  store.uiScale = s;
   const app = document.getElementById('app');
   if (s===1){ app.style.transform=''; app.style.width='100vw'; app.style.height='100vh'; app.style.transformOrigin=''; }
   else {

@@ -43,6 +43,11 @@ export const store = {
   // Web Audio context (created lazily on first user interaction)
   audioCtx: null,
 
+  // Current UI scale multiplier (0.85 / 1 / 1.16 for small/medium/large) —
+  // read by anything that needs to convert screen coordinates to
+  // game-space coordinates, e.g. tooltip positioning.
+  uiScale: 1,
+
   // Main-menu cheat-code input buffer
   cheatBuffer: ''
 };

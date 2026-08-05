@@ -1,11 +1,11 @@
-# chrissi's arena
+# chrissi's Arena
 
-An auto-firing survival roguelite. Move to dodge and position; your
-weapon fires on its own, but only within range. Kill enemies for gold,
-then spend it between waves on permanent upgrades. Reach wave 30 to win,
-or push further in Endless Mode.
+chrissi's Arena is a minimalist auto-fire roguelite where movement is
+the only input that matters. Your weapon aims and fires by itself.
+Collect gold, buy upgrades between waves, survive as long as you can.
 
-This project was originally vibecoded, and is now developed and maintained by myself.
+This project was originally vibecoded — built with the help of AI — and
+is now developed and maintained by chrissi.
 
 ## Getting started
 
@@ -15,6 +15,7 @@ npm run dev       # local dev server with hot reload, http://localhost:5173
 npm run build     # production build → dist/
 npm run preview   # serve the production build locally
 npm test          # run the automated test suite
+npm run lint      # check for undeclared/undefined variable references
 ```
 
 ## Project structure

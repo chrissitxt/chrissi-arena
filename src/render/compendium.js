@@ -13,7 +13,6 @@ import { showScreen } from './screens.js';
 import { store } from '../state/store.js';
 
 export function renderCompendium(tab){
-  compTab = tab;
   const grid = document.getElementById('compendiumGrid');
   grid.innerHTML = '';
   if (tab === 'items'){

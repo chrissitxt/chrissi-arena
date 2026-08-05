@@ -57,7 +57,7 @@ export function showItemTooltip(ev, item, count){
   moveItemTooltip(ev);
 }
 export function moveItemTooltip(ev){
-  const s = currentUIScale || 1;
+  const s = store.uiScale || 1;
   const x = (ev.clientX+16)/s, y = (ev.clientY+16)/s;
   const maxX = (window.innerWidth-256)/s, maxY = (window.innerHeight-140)/s;
   tooltipEl.style.left = Math.min(x, maxX)+'px';
