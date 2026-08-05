@@ -23,7 +23,7 @@ export function refreshMenu(){
   document.getElementById('menuVictories').textContent = store.stats.victories;
 }
 export function applyUIScale(size){
-  const map = { small:0.85, medium:1, large:1.16 };
+  const map = { medium:1, large:1.16 };
   const s = map[size]||1;
   store.uiScale = s;
   const app = document.getElementById('app');

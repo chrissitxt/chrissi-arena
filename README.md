@@ -1,11 +1,10 @@
 # chrissi's Arena
 
-chrissi's Arena is a minimalist auto-fire roguelite where movement is
-the only input that matters. Your weapon aims and fires by itself.
-Collect gold, buy upgrades between waves, survive as long as you can.
+chrissi's Arena is a minimalist, retro-styled auto-fire roguelite where
+movement is the only input that matters. Your weapon aims and fires by
+itself. Collect gold, buy upgrades between waves, survive as long as you can.
 
-This project was originally vibecoded — built with the help of AI — and
-is now developed and maintained by chrissi.
+This project was originally vibecoded and is now developed and maintained by myself.
 
 ## Getting started
 
@@ -22,7 +21,7 @@ npm run lint      # check for undeclared/undefined variable references
 
 ```
 src/
-├── main.js              Entry point — wires DOM controls to handlers, boots the game
+├── main.js              Entry point, wires DOM controls to handlers, boots the game
 ├── dom.js                 Cached references to DOM elements
 ├── storage.js              localStorage persistence (settings, stats, unlocks, run history)
 ├── style.css                All styling
