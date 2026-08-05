@@ -66,12 +66,13 @@ export function sfxBootJingle(){
 
 // --- Background music -----------------------------------------------------
 // A tiny step sequencer: each track is a 4-bar chord progression, one bass
-// note per bar and a 4-note lead arpeggio per bar. Playback reschedules
-// itself every step (setTimeout, not setInterval) so tempo can change
-// smoothly mid-track instead of needing a restart.
+// note, one lead arpeggio note, and a light kick/hat percussion beat per
+// step. Playback reschedules itself every step (setTimeout, not
+// setInterval) so tempo can change smoothly mid-track instead of needing
+// a restart.
 
 const TRACKS = {
-  // A minor, Am-F-C-G — moderate tension, the "exploring the arena" loop.
+  // A minor, Am-F-C-G — calm, unhurried exploring theme.
   main: {
     bass: [110.00, 87.31, 130.81, 98.00],
     lead: [
@@ -80,10 +81,10 @@ const TRACKS = {
       [261.63, 329.63, 392.00, 329.63],
       [196.00, 246.94, 293.66, 246.94]
     ],
-    leadType: 'square', leadVol: 0.022, bassVol: 0.05
+    leadType: 'square', leadVol: 0.018, bassVol: 0.045
   },
-  // A half-step lower and more chromatic — deliberately less settled than
-  // the main theme, swapped in for the duration of a boss fight.
+  // A half-step lower and more chromatic — swapped in for the duration of
+  // a boss fight, noticeably more urgent than the main theme.
   boss: {
     bass: [82.41, 87.31, 82.41, 73.42],
     lead: [
@@ -92,20 +93,26 @@ const TRACKS = {
       [146.83, 174.61, 207.65, 174.61],
       [130.81, 164.81, 196.00, 164.81]
     ],
-    leadType: 'sawtooth', leadVol: 0.028, bassVol: 0.055
+    leadType: 'sawtooth', leadVol: 0.026, bassVol: 0.052
   }
 };
 
-/** Music speeds up in a boss fight, deeper into a run, and at low HP. */
-function currentTempoMs(){
-  let ms = musicMode === 'boss' ? 145 : 210;
+let musicStartDelay = null;
+
+/** Music speeds up in a boss fight, deeper into a run, and at low HP —
+ * but only while a run is actually active. Gating on `store.running`
+ * (not just `store.game` existing) matters: `store.game` still holds the
+ * last run's data right after death, at 0 HP, which would otherwise keep
+ * the music panicked forever on the game-over and menu screens. */
+export function currentTempoMs(){
+  let ms = musicMode === 'boss' ? 190 : 340;
   const g = store.game;
-  if (g){
+  if (store.running && g){
     const waveProgress = Math.max(0, Math.min(1, (g.wave-1)/29));
-    ms -= waveProgress*35;
-    if (g.player && g.player.hp < g.player.maxHp*0.3) ms -= 30;
+    ms -= waveProgress*50;
+    if (g.player && g.player.hp < g.player.maxHp*0.3) ms -= 40;
   }
-  return Math.max(70, ms);
+  return Math.max(85, ms);
 }
 
 function playMusicStep(){
@@ -114,7 +121,12 @@ function playMusicStep(){
   if (store.settings.musicOn && store.audioCtx){
     const bar = Math.floor(musicStep/4) % track.bass.length;
     const beatIdx = musicStep % 4;
-    if (beatIdx === 0) beep(track.bass[bar], tempo/1000*3.4, 'triangle', track.bassVol);
+    if (beatIdx === 0){
+      beep(track.bass[bar], tempo/1000*3.4, 'triangle', track.bassVol);
+      beep(55, 0.05, 'sine', 0.045); // soft kick
+    } else {
+      noiseBurst(0.02, 0.012); // soft hat tick on the off-beats
+    }
     beep(track.lead[bar][beatIdx], tempo/1000*0.85, track.leadType, track.leadVol);
     musicStep = (musicStep+1) % (track.bass.length*4);
   }
@@ -129,6 +141,14 @@ export function startMusic(){
 }
 export function stopMusic(){ if (musicTimeout){ clearTimeout(musicTimeout); musicTimeout=null; } }
 
+/** Cancels any previously-scheduled delayed start before scheduling a new
+ * one, so restarting a run quickly (e.g. dying and immediately hitting
+ * Retry) can never leave two pending starts racing each other. */
+export function scheduleMusicStart(delayMs){
+  clearTimeout(musicStartDelay);
+  musicStartDelay = setTimeout(() => { if (store.settings.musicOn) startMusic(); }, delayMs);
+}
+
 /** Switch between the main and boss themes. Restarts the pattern from the
  * top of the bar for a clean transition rather than cutting in mid-phrase. */
 export function setMusicMode(mode){
@@ -139,7 +159,6 @@ export function setMusicMode(mode){
 
 export function initAudioOnce(){
   ensureAudio();
-  sfxBootJingle();
   if (store.settings.musicOn) startMusic();
   window.removeEventListener('pointerdown', initAudioOnce);
   window.removeEventListener('keydown', initAudioOnce);

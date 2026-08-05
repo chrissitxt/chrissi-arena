@@ -2,7 +2,7 @@
 // the menu, detecting player death (including the Phoenix Heart revive),
 // and ending a run (recording stats + run history).
 
-import { sfxGameOver, sfxPhoenix, setMusicMode } from '../audio/sfx.js';
+import { sfxGameOver, sfxPhoenix, sfxBootJingle, setMusicMode, stopMusic, scheduleMusicStart } from '../audio/sfx.js';
 import { logEl_clear, logEvent, renderBuildGrid } from '../render/hud.js';
 import { refreshMenu, showScreen } from '../render/screens.js';
 import { computeScore } from '../state/derived.js';
@@ -17,6 +17,9 @@ export function startRun(){
   store.game = newGameState();
   store.running = true; store.paused = false;
   setMusicMode('main');
+  stopMusic();
+  sfxBootJingle();
+  scheduleMusicStart(3000);
   logEl_clear();
   logEvent('The arena opens. Wave 1 begins.');
   renderBuildGrid();
