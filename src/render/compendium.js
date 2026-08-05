@@ -1,188 +1,282 @@
-// Compendium (items/enemies+titans/events/achievements/guide tabs),
-// changelog, and statistics screens.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>chrissi's Arena</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%95%B9%EF%B8%8F</text></svg>">
+</head>
+<body>
+<div id="app">
+<div id="scanlines"></div>
+<div id="vignette"></div>
+<div id="filterOverlay">
+  <div class="fx-layer fx-vhs-fringe"></div>
+  <div class="fx-layer fx-vhs-track"></div>
+  <div class="fx-layer fx-arcade-glass"></div>
+</div>
+<div id="itemTooltip" class="hidden"></div>
+<div id="gateOverlay" class="screen hidden" style="z-index:999;">
+  <div class="logo" style="font-size:20px;">DESKTOP ONLY</div>
+  <p style="color:var(--dim); max-width:480px; text-align:center; font-size:12px;">chrissi's Arena needs a bigger screen and a keyboard + mouse to play properly. Open this on a desktop browser, widen your window, or maximize it.</p>
+</div>
 
-import { ACHIEVEMENTS } from '../data/achievements.js';
-import { CHANGELOG } from '../data/changelog.js';
-import { ENEMY_TYPES } from '../data/enemies.js';
-import { EVENTS } from '../data/events.js';
-import { GUIDE_SECTIONS } from '../data/guide.js';
-import { ITEMS, RARITY_ORDER } from '../data/items.js';
-import { canvas } from '../dom.js';
-import { drawEnemyShape } from './canvas.js';
-import { showScreen } from './screens.js';
-import { store } from '../state/store.js';
+  <!-- MAIN MENU -->
+  <div id="screenMenu" class="screen">
+    <div class="logo">CHRISSI'S ARENA</div>
+    <p class="menu-blurb">chrissi's Arena is a minimalist, retro-styled auto-fire roguelite where movement is the only input that matters. Your weapon aims and fires by itself. Collect gold, buy upgrades between waves, survive as long as you can.</p>
+    <div class="bestscore">Best score: <b id="menuBestScore">0</b> &middot; Best wave: <b id="menuBestWave">0</b> &middot; Victories: <b id="menuVictories">0</b></div>
+    <div class="menu-col">
+      <button class="menu-btn" id="btnStart">Start <span class="arrow">&#9654;</span></button>
+      <button class="menu-btn" id="btnCompendium">Compendium <span class="arrow">&#9654;</span></button>
+      <button class="menu-btn" id="btnStats">Statistics <span class="arrow">&#9654;</span></button>
+      <button class="menu-btn" id="btnSettings">Settings <span class="arrow">&#9654;</span></button>
+    </div>
+    <div id="versionTag">v0.8.0-beta &middot; changelog</div>
+    <div id="cheatToast" class="hidden" style="position:absolute; bottom:44px; left:50%; transform:translateX(-50%); color:var(--accent); font-size:11px; background:rgba(10,8,16,0.8); border:1px solid var(--wall-lit); padding:6px 14px; letter-spacing:0.5px;">Compendium fully unlocked!</div>
+  </div>
 
-export function renderCompendium(tab){
-  const grid = document.getElementById('compendiumGrid');
-  grid.innerHTML = '';
-  if (tab === 'items'){
-    grid.style.display = 'block';
-    RARITY_ORDER.forEach(rarity => {
-      const header = document.createElement('div');
-      header.className = 'rarity-section-header rarity-'+rarity;
-      header.textContent = rarity.toUpperCase();
-      grid.appendChild(header);
-      const sub = document.createElement('div');
-      sub.className = 'grid-cards';
-      ITEMS.filter(i=>i.rarity===rarity).forEach(it => {
-        const known = store.compendium.items.includes(it.id);
-        const card = document.createElement('div');
-        card.className = 'card ' + (known ? ('rarity-'+it.rarity) : 'locked');
-        if (known){
-          card.innerHTML = `<div class="card-icon">${it.icon}</div><div class="card-body"><div class="cname">${it.name}</div><div class="cprice">\u25CF ${it.price}</div><div class="cdesc">${it.desc}</div><div class="cstats">${it.stat}</div></div>`;
-        } else {
-          card.innerHTML = `<div class="card-icon">?</div><div class="card-body"><div class="cname">???</div><div class="cdesc">Not yet discovered. Find this item in a run to unlock its entry.</div></div>`;
-        }
-        sub.appendChild(card);
-      });
-      grid.appendChild(sub);
-    });
-    return;
-  } else if (tab === 'enemies'){
-    grid.style.display = 'block';
-    [{key:false,label:'ENEMIES',color:'var(--text)'},{key:true,label:'TITANS',color:'var(--legendary)'}].forEach(group => {
-      const header = document.createElement('div');
-      header.className = 'rarity-section-header';
-      header.style.color = group.color; header.style.borderColor = group.color;
-      header.textContent = group.label;
-      grid.appendChild(header);
-      const sub = document.createElement('div');
-      sub.className = 'grid-cards';
-      ENEMY_TYPES.filter(e => !!e.boss===group.key).forEach(e => {
-        const known = store.compendium.enemies.includes(e.id);
-        const card = document.createElement('div');
-        card.className = 'card ' + (known ? (e.boss ? 'rarity-legendary' : 'rarity-common') : 'locked');
-        const iconWrap = document.createElement('div');
-        iconWrap.className = 'card-icon';
-        if (known){
-          const c = document.createElement('canvas'); c.width=44; c.height=44;
-          const cctx = c.getContext('2d');
-          drawEnemyShape(cctx, 22, 22, e.boss?15:14, e.color, e.shape, false);
-          iconWrap.appendChild(c);
-        } else { iconWrap.textContent = '?'; }
-        const body = document.createElement('div');
-        body.className = 'card-body';
-        if (known){
-          body.innerHTML = `<div class="cname">${e.name}</div><div class="cdesc">${e.desc}</div><div class="cstats">HP ${e.hp} &middot; DMG ${e.dmg} &middot; SPD ${e.speed}</div><div class="cprice">First appears: Wave ${e.minWave}</div>`;
-        } else {
-          body.innerHTML = `<div class="cname">???</div><div class="cdesc">Not yet encountered. Meet this ${e.boss?'boss':'enemy'} in a run to unlock its entry.</div>`;
-        }
-        card.appendChild(iconWrap); card.appendChild(body);
-        sub.appendChild(card);
-      });
-      grid.appendChild(sub);
-    });
-    return;
-  } else if (tab === 'events'){
-    grid.style.display = 'block';
-    [{key:true,label:'BUFFS',color:'var(--accent)'},{key:false,label:'DEBUFFS',color:'var(--danger)'}].forEach(group => {
-      const header = document.createElement('div');
-      header.className = 'rarity-section-header';
-      header.style.color = group.color; header.style.borderColor = group.color;
-      header.textContent = group.label;
-      grid.appendChild(header);
-      const sub = document.createElement('div');
-      sub.className = 'grid-cards';
-      EVENTS.filter(ev=>ev.positive===group.key).forEach(ev => {
-        const known = store.compendium.events.includes(ev.id);
-        const card = document.createElement('div');
-        card.className = 'card ' + (known ? '' : 'locked');
-        if (known){
-          card.innerHTML = `<div class="card-icon" style="color:${group.color}">${ev.positive?'\u2726':'\u26A0'}</div><div class="card-body"><div class="cname" style="color:${group.color}">${ev.label}</div><div class="crarity" style="color:${group.color}">${group.label.slice(0,-1)}</div><div class="cdesc">${ev.desc} Lasts 1-4 waves, chosen at random each time.</div></div>`;
-        } else {
-          card.innerHTML = `<div class="card-icon">?</div><div class="card-body"><div class="cname">???</div><div class="cdesc">Not yet encountered. This event will unlock its entry the first time it happens in a run.</div></div>`;
-        }
-        sub.appendChild(card);
-      });
-      grid.appendChild(sub);
-    });
-    return;
-  } else if (tab === 'achievements'){
-    grid.style.display = 'grid';
-    ACHIEVEMENTS.forEach(a => {
-      const known = store.compendium.achievements.includes(a.id);
-      const card = document.createElement('div');
-      card.className = 'card ' + (known ? 'rarity-legendary' : 'locked');
-      if (known){
-        card.innerHTML = `<div class="card-icon">${a.icon}</div><div class="card-body"><div class="cname">${a.name}</div><div class="cdesc">${a.desc}</div></div>`;
-      } else {
-        card.innerHTML = `<div class="card-icon">?</div><div class="card-body"><div class="cname">???</div><div class="cdesc">Not yet unlocked.</div></div>`;
-      }
-      grid.appendChild(card);
-    });
-  } else if (tab === 'guide'){
-    grid.style.display = 'block';
-    GUIDE_SECTIONS.forEach(s => {
-      const d = document.createElement('div');
-      d.className = 'guide-block';
-      d.innerHTML = `<h3>${s.title}</h3><p>${s.text}</p>`;
-      grid.appendChild(d);
-    });
-    return;
-  }
-}
-export function renderChangelog(){
-  const wrap = document.getElementById('changelogList');
-  wrap.innerHTML = '';
-  CHANGELOG.forEach(entry => {
-    const d = document.createElement('div'); d.className = 'guide-block';
-    d.innerHTML = `<h3>v${entry.version}</h3><ul style="margin:0; padding-left:18px;">${entry.notes.map(n=>'<li>'+n+'</li>').join('')}</ul>`;
-    wrap.appendChild(d);
-  });
-}
-export function renderStats(){
-  document.getElementById('statRuns').textContent = store.stats.runs;
-  document.getElementById('statBestWave').textContent = store.stats.bestWave;
-  document.getElementById('statBestScore').textContent = store.stats.bestScore;
-  document.getElementById('statVictories').textContent = store.stats.victories;
-  document.getElementById('statKills').textContent = store.stats.totalKills;
-  document.getElementById('statGold').textContent = store.stats.totalGold;
-  const mins = Math.floor(store.stats.totalTime/60), secs = Math.floor(store.stats.totalTime%60);
-  document.getElementById('statTime').textContent = `${mins}m ${secs}s`;
-  const counts = store.stats.itemPurchaseCounts || {};
-  let bestId = null, bestCount = 0;
-  Object.keys(counts).forEach(id => { if (counts[id] > bestCount){ bestCount = counts[id]; bestId = id; } });
-  const favEl = document.getElementById('statFavItem');
-  if (bestId){
-    const it = ITEMS.find(i=>i.id===bestId);
-    favEl.textContent = it ? `${it.icon} ${it.name} (${bestCount}x)` : 'None yet';
-  } else { favEl.textContent = 'None yet'; }
-  const wrap = document.getElementById('runHistoryList');
-  wrap.innerHTML = '';
-  if (!store.runHistory.length){ wrap.innerHTML = '<div style="color:var(--dim); font-size:11px;">No runs recorded yet.</div>'; return; }
-  store.runHistory.forEach(r => {
-    const d = document.createElement('div');
-    d.className = 'history-row';
-    const date = new Date(r.date);
-    const tag = r.victory ? '\u2605 ' : '';
-    const statLine = document.createElement('div');
-    statLine.className = 'history-stat-line';
-    statLine.innerHTML = `<span class="hwave">${tag}Wave ${r.wave}</span><span>Score ${r.score}</span><span>${r.kills} kills</span><span class="hquit">${r.quit?'quit &middot; ':''}${date.toLocaleDateString()}</span>`;
-    d.appendChild(statLine);
-    const iconLine = document.createElement('div');
-    iconLine.className = 'history-icon-line';
-    if (r.items && r.items.length){
-      r.items.forEach(entry => {
-        const it = ITEMS.find(i=>i.id===entry.id);
-        if (!it) return;
-        const span = document.createElement('span');
-        span.className = 'history-icon rarity-'+it.rarity;
-        span.textContent = it.icon + (entry.count>1?('\u00d7'+entry.count):'');
-        span.title = it.name;
-        iconLine.appendChild(span);
-      });
-    } else {
-      iconLine.innerHTML = '<span style="color:var(--dim); font-size:9.5px;">No items this run.</span>';
-    }
-    d.appendChild(iconLine);
-    wrap.appendChild(d);
-  });
-}
-export function openCompendium(returnTo){
-  store.settingsReturnTo = returnTo;
-  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-  const itemsTab = document.querySelector('.tab[data-tab="items"]');
-  if (itemsTab) itemsTab.classList.add('active');
-  renderCompendium('items');
-  showScreen('compendium');
-}
+  <!-- SETTINGS -->
+  <div id="screenSettings" class="screen hidden">
+    <div class="panel-box" style="width:min(560px,92vw);">
+      <div class="panel-header"><h2>SETTINGS</h2><button class="backbtn" data-back>&larr; Back</button></div>
+
+      <div class="setting-row">
+        <span>VSync</span>
+        <div class="toggle-opts">
+          <button class="toggle-opt" data-toggle="vsyncOn" data-val="true">On</button>
+          <button class="toggle-opt" data-toggle="vsyncOn" data-val="false">Off</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span>Framerate cap</span>
+        <div class="fps-opts">
+          <button class="fps-opt" data-fps="30">30</button>
+          <button class="fps-opt" data-fps="60">60</button>
+          <button class="fps-opt" data-fps="120">120</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span>Show FPS counter</span>
+        <div class="toggle-opts">
+          <button class="toggle-opt" data-toggle="showFps" data-val="true">On</button>
+          <button class="toggle-opt" data-toggle="showFps" data-val="false">Off</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span>UI size</span>
+        <div class="toggle-opts">
+          <button class="toggle-opt" data-uiscale="medium">Medium</button>
+          <button class="toggle-opt" data-uiscale="large">Large</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span>Atmosphere</span>
+        <div class="toggle-opts">
+          <button class="toggle-opt" data-brightness="dark">Darker</button>
+          <button class="toggle-opt" data-brightness="bright">Brighter</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span>Music</span>
+        <div class="toggle-opts">
+          <button class="toggle-opt" data-toggle="musicOn" data-val="true">On</button>
+          <button class="toggle-opt" data-toggle="musicOn" data-val="false">Off</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span>Sound effects</span>
+        <div class="toggle-opts">
+          <button class="toggle-opt" data-toggle="sfxOn" data-val="true">On</button>
+          <button class="toggle-opt" data-toggle="sfxOn" data-val="false">Off</button>
+        </div>
+      </div>
+      <p class="setting-note">VSync uses your monitor's native refresh timing directly and disables the manual framerate cap above. Music and sound effects are synthesized live with the Web Audio API (oscillators and noise bursts shaped into notes), so nothing needs to load. If the game runs choppy, check that hardware/GPU acceleration is enabled in your browser's settings.</p>
+
+      <div class="setting-section-title">SAVE DATA</div>
+      <p class="setting-note" style="margin-bottom:8px;">Your statistics, compendium progress, and settings are stored locally in this browser. Export a backup or move your progress to another device.</p>
+      <div style="display:flex; gap:10px;">
+        <button class="save-btn" id="btnExportSave">Export Save</button>
+        <button class="save-btn" id="btnImportSave">Import Save</button>
+        <input type="file" id="importFileInput" accept="application/json" class="hidden">
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPENDIUM -->
+  <div id="screenCompendium" class="screen hidden">
+    <div class="panel-box">
+      <div class="panel-header"><h2>COMPENDIUM</h2><button class="backbtn" data-back>&larr; Back</button></div>
+      <div class="tabs">
+        <button class="tab active" data-tab="items">Items</button>
+        <button class="tab" data-tab="enemies">Enemies</button>
+        <button class="tab" data-tab="events">Events</button>
+        <button class="tab" data-tab="achievements">Achievements</button>
+        <button class="tab" data-tab="guide">Guide</button>
+      </div>
+      <div class="grid-cards" id="compendiumGrid"></div>
+    </div>
+  </div>
+
+  <!-- STATISTICS -->
+  <div id="screenStats" class="screen hidden">
+    <div class="panel-box" style="width:min(600px,92vw);">
+      <div class="panel-header"><h2>STATISTICS</h2><button class="backbtn" data-back>&larr; Back</button></div>
+      <div class="stat-grid">
+        <div class="stat-tile"><div class="val" id="statRuns">0</div><div class="lbl">RUNS PLAYED</div></div>
+        <div class="stat-tile"><div class="val" id="statBestWave">0</div><div class="lbl">BEST WAVE</div></div>
+        <div class="stat-tile"><div class="val" id="statBestScore">0</div><div class="lbl">BEST SCORE</div></div>
+        <div class="stat-tile"><div class="val" id="statVictories">0</div><div class="lbl">VICTORIES</div></div>
+        <div class="stat-tile"><div class="val" id="statKills">0</div><div class="lbl">TOTAL KILLS</div></div>
+        <div class="stat-tile"><div class="val" id="statGold">0</div><div class="lbl">TOTAL GOLD EARNED</div></div>
+        <div class="stat-tile"><div class="val" id="statTime">0</div><div class="lbl">TIME SURVIVED (TOTAL)</div></div>
+        <div class="stat-tile"><div class="val" id="statFavItem" style="font-size:14px;">None yet</div><div class="lbl">MOST BOUGHT ITEM</div></div>
+      </div>
+      <div class="setting-section-title">RECENT RUNS</div>
+      <p class="setting-note" style="margin-top:0;">Shows only your last 5 runs, each with the build you had when it ended.</p>
+      <div id="runHistoryList"></div>
+    </div>
+  </div>
+
+  <!-- CHANGELOG -->
+  <div id="screenChangelog" class="screen hidden">
+    <div class="panel-box" style="width:min(600px,92vw);">
+      <div class="panel-header"><h2>CHANGELOG</h2><button class="backbtn" id="btnChangelogBack">&larr; Back</button></div>
+      <div id="changelogList"></div>
+    </div>
+  </div>
+
+  <!-- GAMEPLAY -->
+  <div id="gameWrap" class="hidden">
+    <div class="side-panel" id="leftPanel">
+      <div class="panel-title">STATUS</div>
+      <div class="stat-row-sm"><span class="lbl">Wave</span><span id="waveLabel">1</span></div>
+      <div class="stat-row-sm"><span class="lbl">Score</span><span id="scoreLabel">0</span></div>
+      <div>
+        <div class="stat-row-sm"><span class="lbl">HP</span><span id="hpLabel">100/100</span></div>
+        <div class="bar-outer"><div class="bar-inner bar-hp" id="hpBar" style="width:100%"></div></div>
+      </div>
+      <div>
+        <div class="stat-row-sm"><span class="lbl" id="timeBarLabel">Wave timer</span><span id="timeLabel"></span></div>
+        <div class="bar-outer"><div class="bar-inner bar-time" id="timeBar" style="width:100%"></div></div>
+      </div>
+      <div class="stat-row-sm"><span class="lbl">Gold</span><span id="goldLabel">&#9679; 0</span></div>
+      <div id="activeEventRow" class="hidden" style="margin-top:6px; background:var(--panel2); border:1px solid var(--wall); padding:7px 8px;">
+        <div id="activeEventText" style="font-size:10px; line-height:1.5;"></div>
+      </div>
+      <div class="panel-title" style="margin-top:6px;">BUILD STATS</div>
+      <div class="stat-row-sm"><span class="lbl" title="Base damage dealt per hit, before crits and the target's armor.">Damage</span><span id="statDamage">-</span></div>
+      <div class="stat-row-sm"><span class="lbl" title="Maximum distance your weapon can auto-target enemies. Shown as a faint ring around you.">Range</span><span id="statRange">-</span></div>
+      <div class="stat-row-sm"><span class="lbl" title="Shots fired per second.">Fire rate</span><span id="statFireRate">-</span></div>
+      <div class="stat-row-sm"><span class="lbl" title="How fast you move.">Move speed</span><span id="statSpeed">-</span></div>
+      <div class="stat-row-sm"><span class="lbl" title="Flat damage reduction on hits you take. Can go negative from cursed items, which increases damage taken instead.">Armor</span><span id="statArmor">-</span></div>
+      <div class="stat-row-sm"><span class="lbl" title="Chance per shot to critically hit, and the damage multiplier when it does.">Crit</span><span id="statCrit">-</span></div>
+      <div class="stat-row-sm"><span class="lbl" title="Percent of damage you deal that heals you back.">Lifesteal</span><span id="statLifesteal">-</span></div>
+      <div class="stat-row-sm"><span class="lbl" title="Chance to avoid incoming damage entirely. Normally capped at 60% (some cursed items raise the cap).">Dodge</span><span id="statDodge">-</span></div>
+      <div class="stat-row-sm"><span class="lbl" title="Distance at which gold starts flying toward you automatically.">Pickup range</span><span id="statPickup">-</span></div>
+    </div>
+
+    <div id="arenaFrame">
+      <div class="ambient-particle" style="top:8%; left:6%; background:var(--accent); animation-delay:0s;"></div>
+      <div class="ambient-particle" style="top:80%; left:10%; background:var(--gold); animation-delay:2s;"></div>
+      <div class="ambient-particle" style="top:15%; left:92%; background:var(--legendary); animation-delay:4s;"></div>
+      <div class="ambient-particle" style="top:75%; left:90%; background:var(--rare); animation-delay:6s;"></div>
+      <div class="ambient-particle" style="top:45%; left:3%; background:var(--epic); animation-delay:1s;"></div>
+      <div class="ambient-particle" style="top:50%; left:96%; background:var(--accent); animation-delay:3s;"></div>
+      <div id="canvasFrame">
+        <div id="canvasHolder">
+          <canvas id="gameCanvas"></canvas>
+          <div id="fpsCounter" class="hidden">FPS: 60</div>
+          <div id="pauseHint">ESC to pause</div>
+          <div id="waveBanner"></div>
+          <div id="bossBanner"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-panel" id="rightPanel">
+      <div class="panel-title">YOUR BUILD (<span id="buildCount">0</span>/<span id="buildCap">12</span>)</div>
+      <div id="buildGrid"></div>
+      <div class="panel-title" style="margin-top:6px;">LOG</div>
+      <div id="eventLog"></div>
+    </div>
+  </div>
+
+  <!-- PAUSE -->
+  <div id="screenPause" class="screen hidden">
+    <div class="logo" style="font-size:20px;">PAUSED</div>
+    <div id="pauseStats" style="width:280px; background:var(--panel2); border:2px solid var(--wall); padding:12px 14px;"></div>
+    <div class="menu-col">
+      <button class="bigbtn" id="btnResume">Resume</button>
+      <button class="bigbtn secondary" id="btnPauseCompendium">Compendium</button>
+      <button class="bigbtn secondary" id="btnPauseSettings">Settings</button>
+      <button class="bigbtn secondary" id="btnPauseQuit">Quit to Menu</button>
+    </div>
+  </div>
+
+  <!-- EVENT -->
+  <div id="screenEvent" class="screen hidden">
+    <div class="logo" style="font-size:18px;">EVENT</div>
+    <div class="event-icon" id="eventIcon">&#10022;</div>
+    <div id="eventTitle" style="font-size:16px; font-weight:700;"></div>
+    <p id="eventDesc" style="color:var(--dim); max-width:420px; text-align:center; font-size:12px; font-weight:500;"></p>
+    <button class="bigbtn" id="btnEventContinue">Continue</button>
+  </div>
+
+  <!-- SHOP -->
+  <div id="screenShop" class="screen hidden">
+    <div class="shop-sparkle" style="top:12%; left:10%; animation-delay:0s;">&#10022;</div>
+    <div class="shop-sparkle" style="top:75%; left:15%; animation-delay:3s;">&#9733;</div>
+    <div class="shop-sparkle" style="top:20%; left:88%; animation-delay:6s;">&#10022;</div>
+    <div class="shop-sparkle" style="top:70%; left:85%; animation-delay:2s;">&#10022;</div>
+    <div class="shop-sparkle" style="top:45%; left:5%; animation-delay:8s;">&#9733;</div>
+    <div class="shop-sparkle" style="top:40%; left:94%; animation-delay:5s;">&#9733;</div>
+    <div class="logo" style="font-size:17px;">WAVE CLEARED</div>
+    <div class="stat-row-sm" style="color:var(--gold); font-size:14px; font-weight:700;" id="shopGoldFlash"><span id="shopGold">&#9679; 0 gold</span></div>
+    <div class="shop-cards" id="shopCards"></div>
+    <div class="shop-controls">
+      <button class="bigbtn secondary" id="btnReroll">Reroll (<span id="rerollCost">Free</span>)</button>
+      <button class="bigbtn" id="btnContinue">Continue &#9654;</button>
+    </div>
+    <div class="shop-build-section">
+      <div class="panel-title">YOUR BUILD (<span id="shopBuildCount">0</span>/<span id="shopBuildCap">12</span>)</div>
+      <div id="shopBuildGrid"></div>
+      <div class="shop-build-hint">Click an item (marked SELL) to sell it back for half its price and free a slot.</div>
+    </div>
+  </div>
+
+  <!-- VICTORY -->
+  <div id="screenVictory" class="screen hidden">
+    <div class="victorytext">VICTORY</div>
+    <p style="color:var(--dim); max-width:420px; text-align:center; font-size:12px; font-weight:500;">You defeated The Devourer and cleared the arena. Keep going in Endless Mode to push your score even higher.</p>
+    <div class="stat-grid" style="width:400px;">
+      <div class="stat-tile"><div class="val" id="victoryWave">30</div><div class="lbl">WAVE REACHED</div></div>
+      <div class="stat-tile"><div class="val" id="victoryScore">0</div><div class="lbl">SCORE</div></div>
+    </div>
+    <div class="menu-col">
+      <button class="bigbtn" id="btnContinueEndless">Continue (Endless Mode)</button>
+      <button class="bigbtn secondary" id="btnVictoryMenu">Main Menu</button>
+    </div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div id="screenGameOver" class="screen hidden">
+    <div class="logo" style="font-size:22px; filter: drop-shadow(2px 2px 0 #000); background:none; -webkit-text-fill-color: var(--danger); color: var(--danger); animation:none;">YOU FELL</div>
+    <div id="goVictoryTag" class="hidden" style="color:var(--legendary); font-size:11px; letter-spacing:1px;">&#9733; Victory achieved this run</div>
+    <div id="newBestBanner" class="newbest hidden">&#9733; NEW BEST SCORE &#9733;</div>
+    <div class="stat-grid" style="width:400px;">
+      <div class="stat-tile"><div class="val" id="goWave">1</div><div class="lbl">WAVE REACHED</div></div>
+      <div class="stat-tile"><div class="val" id="goScore">0</div><div class="lbl">SCORE</div></div>
+      <div class="stat-tile"><div class="val" id="goKills">0</div><div class="lbl">KILLS</div></div>
+      <div class="stat-tile"><div class="val" id="goGold">0</div><div class="lbl">GOLD EARNED</div></div>
+    </div>
+    <div class="menu-col">
+      <button class="bigbtn" id="btnRetry">Retry</button>
+      <button class="bigbtn secondary" id="btnGoMenu">Main Menu</button>
+    </div>
+  </div>
+
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

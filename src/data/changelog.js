@@ -1,10 +1,22 @@
 // Version history shown in the in-game changelog screen. Newest first.
+//
+// House rule: when an entry adds items or enemies, list their names only —
+// never describe what they do. That's for the player to find out.
 
 export const CHANGELOG = [
+  { version:'0.8.0-beta', notes:[
+    'Rebuilt the game from a single 2,500-line file into a properly organized, modular codebase, necessary for the game to keep growing without accumulating bugs in stranger and stranger places. The source is now open on GitHub',
+    'Fixed item tooltips appearing in the wrong position',
+    'Fixed the Compendium failing to open',
+    'The Darker/Brighter atmosphere setting now makes an actual visible difference',
+    'Removed the Small UI size option',
+    'Reworked the Guide tab: merged a few overlapping sections, cut some redundant ones, and cleaned up the wording throughout',
+    'New menu description, and a new favicon'
+  ] },
   { version:'0.7.0-beta', notes:[
     'Your position now resets to the center of the arena at the start of each wave',
-    'Added new items: a free extra shop reroll, a bomb that drops behind you and can hurt you too, one that doubles an item\'s effect when you buy a second copy, and one that gets stronger the more empty build slots you have',
-    'Added 2 new enemies: one invisible until it gets close, one that splits into weaker enemies when it dies',
+    "Added new items: Fortune's Charm, Sticky Charges, Resonance Core, and Minimalist's Edge",
+    'Added 2 new enemies: Shade and Bloater',
     'Legendary items now get a much stronger visual showcase in the shop',
     'Moved the light-sweep effect to the main menu only; it was distracting during gameplay and settings'
   ] },
@@ -12,7 +24,7 @@ export const CHANGELOG = [
     'Combined the VHS and Arcade looks into one fixed retro filter; removed the filter picker and the custom cursor',
     'The Compendium window no longer resizes when you switch tabs',
     'Item prices and reroll costs now round to clean numbers',
-    'Added orbiting blade weapons and a cursed item that raises the dodge cap to 90%'
+    'Added orbiting blade weapons and Whirlwind Pact'
   ] },
   { version:'0.5.1-beta', notes:[
     'Fixed a shop pricing bug where item costs could go stale mid-visit',
@@ -27,7 +39,7 @@ export const CHANGELOG = [
     'Fixed the shooting range and reworked the gold economy for a slower, harder game',
     'Added a gold cap, fixed item prices with a compendium listing, and shop discounts',
     'Legendary items are capped at 1 by default; stacking non-legendaries now costs more each copy',
-    'Added Overreach (cursed, allows a 2nd legendary) and Bottomless Satchel (legendary, +2 build capacity)',
+    'Added Overreach and Bottomless Satchel',
     'Added periodic buff/debuff events between some waves',
     'Added 2 new enemies: Leech and Jammer',
     'Added a VHS filter, FPS counter, VSync toggle, and a UI size setting',
