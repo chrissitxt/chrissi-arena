@@ -8,7 +8,7 @@
 // `revealed:true` set explicitly, or the boss is invisible and
 // untargetable (this happened once for real; see the changelog).
 
-import { sfxBossAttack, sfxBossSpawn, sfxEnemyDeath, sfxExplosion } from '../audio/sfx.js';
+import { sfxBossAttack, sfxBossSpawn, sfxEnemyDeath, sfxExplosion, setMusicMode } from '../audio/sfx.js';
 import { ARENA_H, ARENA_W, BOSS_EVERY, WIN_WAVE } from '../data/constants.js';
 import { BOSS_CYCLE, ENEMY_TYPES } from '../data/enemies.js';
 import { logEvent, showBossBanner } from '../render/hud.js';
@@ -17,7 +17,7 @@ import { STORE_COMPENDIUM, saveJSON } from '../storage.js';
 import { unlockAchievement } from './achievements.js';
 import { applyDamageToPlayer } from './combat.js';
 import { loop } from './loop.js';
-import { spawnDamageText, spawnDeathBurst, triggerShake } from './particles.js';
+import { spawnDamageText, spawnDeathBurst, triggerShake, triggerChroma, triggerHitStop } from './particles.js';
 import { finishWave, triggerVictory } from './wave.js';
 import { clamp } from '../utils.js';
 
@@ -55,7 +55,8 @@ export function spawnBoss(def, loop){
   store.game.currentBossDamaged = false;
   showBossBanner(def.name);
   logEvent(`${def.name} has entered the arena!`);
-  sfxBossSpawn(); triggerShake(8,0.4);
+  sfxBossSpawn(); triggerShake(11,0.4); triggerChroma();
+  setMusicMode('boss');
 }
 export function isBossWaveNow(){ return (store.game.wave===WIN_WAVE) || (store.game.wave % BOSS_EVERY === 0); }
 export function spawnEnemy(){
@@ -87,7 +88,7 @@ export function fireRing(e){
   const n=14;
   for (let i=0;i<n;i++){ const ang=(i/n)*Math.PI*2;
     store.game.enemyProjectiles.push({x:e.x,y:e.y,vx:Math.cos(ang)*170,vy:Math.sin(ang)*170,dmg:Math.round(e.dmg*0.55),life:3.2,radius:6,color:'#ff5f8f'}); }
-  sfxBossAttack(); triggerShake(5,0.2);
+  sfxBossAttack(); triggerShake(6,0.2);
 }
 export function summonAdds(e, typeId, count){
   const type = ENEMY_TYPES.find(t=>t.id===typeId);
@@ -150,7 +151,7 @@ export function handleBossBehavior(e, dt, spd){
     if (e.slamTimer<=0){
       e.slamTimer = e.id==='finalboss'?6:5;
       const d = Math.hypot(p.x-e.x,p.y-e.y);
-      if (d<=95) { applyDamageToPlayer(e.id==='finalboss'?30:26); triggerShake(10,0.3); }
+      if (d<=95) { applyDamageToPlayer(e.id==='finalboss'?30:26); triggerShake(14,0.35); triggerChroma(); triggerHitStop(0.07); }
       spawnDeathBurst(e.x,e.y,'#ffffff',14);
       sfxBossAttack();
     }
@@ -218,6 +219,7 @@ export function killEnemy(e){
   }
   if (e.boss){
     store.game.bossSpawned = false;
+    setMusicMode('main');
     const slayId = {warlord:'slay_warlord', broodmother:'slay_broodmother', colossus:'slay_colossus', finalboss:'slay_devourer'}[e.id];
     if (slayId) unlockAchievement(slayId);
     if (!store.game.currentBossDamaged){

@@ -2,7 +2,7 @@
 // the menu, detecting player death (including the Phoenix Heart revive),
 // and ending a run (recording stats + run history).
 
-import { sfxGameOver, sfxPhoenix } from '../audio/sfx.js';
+import { sfxGameOver, sfxPhoenix, setMusicMode } from '../audio/sfx.js';
 import { logEl_clear, logEvent, renderBuildGrid } from '../render/hud.js';
 import { refreshMenu, showScreen } from '../render/screens.js';
 import { computeScore } from '../state/derived.js';
@@ -16,6 +16,7 @@ import { spawnDamageText, triggerShake } from './particles.js';
 export function startRun(){
   store.game = newGameState();
   store.running = true; store.paused = false;
+  setMusicMode('main');
   logEl_clear();
   logEvent('The arena opens. Wave 1 begins.');
   renderBuildGrid();
@@ -25,7 +26,7 @@ export function startRun(){
   store.animHandle = requestAnimationFrame(loop);
 }
 export function resumeGame(){ store.paused = false; showScreen('game'); store.lastFrameTime = performance.now(); }
-export function quitToMenu(){ store.running = false; store.paused = false; refreshMenu(); showScreen('menu'); }
+export function quitToMenu(){ store.running = false; store.paused = false; setMusicMode('main'); refreshMenu(); showScreen('menu'); }
 export function checkPlayerDeath(){
   const p = store.game.player;
   if (p.hp<=0){
@@ -54,6 +55,7 @@ export async function endRun(){
   store.runHistory.unshift({ wave:store.game.wave, score, kills:store.game.kills, gold:store.game.gold, victory:store.game.gameWon, quit:false, date:Date.now(), items:buildSnapshot() });
   store.runHistory = store.runHistory.slice(0,5);
   await saveJSON(STORE_HISTORY, store.runHistory);
+  setMusicMode('main');
   sfxGameOver();
   document.getElementById('goWave').textContent = store.game.wave;
   document.getElementById('goScore').textContent = score;

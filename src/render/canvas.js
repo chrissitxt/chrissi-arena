@@ -125,7 +125,10 @@ export function render(){
     ctx.fillStyle = t.color;
     ctx.font = (t.big ? 'bold 15px monospace' : (t.text==='DODGE'?'10px monospace':'11px monospace'));
     ctx.textAlign = 'center';
+    ctx.shadowColor = t.color;
+    ctx.shadowBlur = t.big ? 12 : 7;
     ctx.fillText(t.text, t.x, t.y);
+    ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
   }
 

@@ -11,6 +11,7 @@ canvas.height = ARENA_H;
 
 export const gameWrap = document.getElementById('gameWrap');
 export const tooltipEl = document.getElementById('itemTooltip');
+export const canvasHolder = document.getElementById('canvasHolder');
 
 export const screens = {
   menu: document.getElementById('screenMenu'),

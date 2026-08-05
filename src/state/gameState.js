@@ -13,6 +13,7 @@ export function newGameState() {
     wave: 1, waveTime: 0, waveDuration: waveDurationFor(1), waveActive: true,
     spawnTimer: 0, gold: 0, kills: 0, elapsed: 0, over: false, gameWon: false,
     bossSpawned: false, shakeTime: 0, shakeMag: 0, goldCapNotified: false,
+    hitStopTimer: 0,
     activeEvent: null,
     currentBossDamaged: false, idleTimer: 0, orbitAngle: 0, orbitBlades: [],
     freeRerolls: 0, freeRerollsFromBase: 0, freeRerollUsedThisRun: false,

@@ -209,6 +209,7 @@
   .stat-row-sm { display:flex; justify-content:space-between; padding: 3px 0; }
   .stat-row-sm .lbl { color: var(--dim); }
   .stat-row-sm .lbl[title] { border-bottom: 1px dotted var(--wall-lit); }
+  .stat-row-sm > span:last-child { color: var(--accent); text-shadow: 0 0 6px rgba(126,231,135,0.55), 0 0 1px rgba(126,231,135,0.8); }
   .bar-outer { width:100%; height: 12px; background:#000; border:2px solid var(--wall); }
   .bar-inner { height:100%; transition: width .12s; }
   .bar-hp { background: var(--danger); }
@@ -226,7 +227,7 @@
   .sell-badge { position:absolute; top:-6px; left:-6px; background:var(--danger); color:#fff; font-size:6.5px; font-weight:700; border-radius:4px; padding:1px 2px; line-height:1.2; letter-spacing:.5px; }
   #eventLog { font-size: 10px; line-height: 1.65; color: var(--dim); flex:1; overflow-y:auto; min-height:60px; font-weight:500; }
   #eventLog div.recent { color: var(--text); }
-  #goldLabel { color: var(--gold); font-weight:700; }
+  #goldLabel { color: var(--gold); font-weight:700; text-shadow: 0 0 6px rgba(242,201,76,0.6), 0 0 1px rgba(242,201,76,0.85); }
 
   #arenaFrame { flex:1; display:flex; align-items:center; justify-content:center; position:relative; min-width:0; perspective: 1300px; }
   .ambient-particle { position:absolute; width:6px; height:6px; border-radius:50%; opacity:0.18; filter: blur(1px); animation: floatParticle 14s ease-in-out infinite; pointer-events:none; }
@@ -242,6 +243,12 @@
   #app.boss-active #canvasFrame { animation: frameGlowBoss 1.8s ease-in-out infinite; }
   @keyframes frameGlowBoss { 0%,100%{ box-shadow: 0 0 0 2px #000, 0 0 45px rgba(229,83,75,0.22), 6px 6px 0 rgba(0,0,0,0.5);} 50%{ box-shadow: 0 0 0 2px #000, 0 0 65px rgba(229,83,75,0.4), 6px 6px 0 rgba(0,0,0,0.5);} }
   #canvasHolder { position:relative; background:#0d0a14; line-height:0; }
+  #canvasHolder.chroma-pulse { animation: chromaPulse 0.32s ease-out; }
+  @keyframes chromaPulse {
+    0% { filter: drop-shadow(3px 0 0 rgba(255,25,60,0.55)) drop-shadow(-3px 0 0 rgba(30,220,255,0.5)); }
+    60% { filter: drop-shadow(1.5px 0 0 rgba(255,25,60,0.3)) drop-shadow(-1.5px 0 0 rgba(30,220,255,0.28)); }
+    100% { filter: drop-shadow(0 0 0 rgba(255,25,60,0)) drop-shadow(0 0 0 rgba(30,220,255,0)); }
+  }
   #gameCanvas { max-width: 100%; max-height: 100%; width: auto; height: auto; }
   #pauseHint { position:absolute; bottom:6px; left:8px; font-size:9px; color: var(--dim); z-index:5; }
   #fpsCounter { position:absolute; top:6px; left:8px; font-size:10px; color: var(--accent); z-index:5; background:rgba(0,0,0,0.5); padding:2px 6px; }

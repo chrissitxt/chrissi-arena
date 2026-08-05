@@ -14,6 +14,24 @@ import { groupOwnedItems } from '../systems/economy.js';
 import { isBossWaveNow } from '../systems/enemies.js';
 import { fmtPct } from '../utils.js';
 
+let displayedScore = 0;
+let lastScoreTickTs = 0;
+
+/** Ticks the on-screen score toward the real score instead of snapping,
+ * frame-rate independent (uses wall-clock time between calls, not a fixed
+ * per-call step). Self-corrects to 0 the moment a new run's score is
+ * lower than what's currently shown, so a fresh run never has to remember
+ * to reset this explicitly. */
+function tickDisplayedScore(target){
+  const now = performance.now();
+  const dt = lastScoreTickTs ? Math.min(0.05, (now - lastScoreTickTs) / 1000) : 0;
+  lastScoreTickTs = now;
+  if (target <= displayedScore){ displayedScore = target; return displayedScore; }
+  const step = Math.max(1, Math.ceil((target - displayedScore) * dt * 6));
+  displayedScore = Math.min(target, displayedScore + step);
+  return displayedScore;
+}
+
 export function updateHUD(){
   const p = store.game.player;
   const lowHp = p.hp < p.maxHp*0.35, critHp = p.hp < p.maxHp*0.15;
@@ -24,7 +42,7 @@ export function updateHUD(){
   document.getElementById('hpLabel').textContent = `${Math.max(0,Math.ceil(p.hp))}/${Math.round(p.maxHp)}`;
   document.getElementById('hpBar').style.width = Math.max(0,(p.hp/p.maxHp*100))+'%';
   document.getElementById('waveLabel').textContent = store.game.wave + (isBossWaveNow()?' (BOSS)':'') + (store.game.gameWon?' \u2726':'');
-  document.getElementById('scoreLabel').textContent = computeScore();
+  document.getElementById('scoreLabel').textContent = tickDisplayedScore(computeScore());
   document.getElementById('goldLabel').textContent = `\u25CF ${store.game.gold}/${GOLD_CAP}`;
 
   const evRow = document.getElementById('activeEventRow');

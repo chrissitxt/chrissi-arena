@@ -37,6 +37,7 @@ export function loop(now){
 }
 export function update(dt){
   if (!store.game || store.game.over) return;
+  if (store.game.hitStopTimer > 0){ store.game.hitStopTimer -= dt; return; }
   store.game.elapsed += dt;
   if (store.game.shakeTime>0) store.game.shakeTime -= dt; else store.game.shakeMag = 0;
   const p = store.game.player;
