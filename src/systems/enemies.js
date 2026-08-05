@@ -17,7 +17,7 @@ import { STORE_COMPENDIUM, saveJSON } from '../storage.js';
 import { unlockAchievement } from './achievements.js';
 import { applyDamageToPlayer } from './combat.js';
 import { loop } from './loop.js';
-import { spawnDamageText, spawnDeathBurst, triggerShake, triggerChroma, triggerHitStop } from './particles.js';
+import { spawnDamageText, spawnDeathBurst, triggerShake, triggerChroma, triggerHitStop, triggerFrameFlash } from './particles.js';
 import { finishWave, triggerVictory } from './wave.js';
 import { clamp } from '../utils.js';
 
@@ -55,7 +55,7 @@ export function spawnBoss(def, loop){
   store.game.currentBossDamaged = false;
   showBossBanner(def.name);
   logEvent(`${def.name} has entered the arena!`);
-  sfxBossSpawn(); triggerShake(11,0.4); triggerChroma();
+  sfxBossSpawn(); triggerShake(11,0.4); triggerChroma(); triggerFrameFlash('rgba(229,83,75,1)', 'rgba(229,83,75,0.7)', 0.7);
   setMusicMode('boss');
 }
 export function isBossWaveNow(){ return (store.game.wave===WIN_WAVE) || (store.game.wave % BOSS_EVERY === 0); }
@@ -151,7 +151,7 @@ export function handleBossBehavior(e, dt, spd){
     if (e.slamTimer<=0){
       e.slamTimer = e.id==='finalboss'?6:5;
       const d = Math.hypot(p.x-e.x,p.y-e.y);
-      if (d<=95) { applyDamageToPlayer(e.id==='finalboss'?30:26); triggerShake(14,0.35); triggerChroma(); triggerHitStop(0.07); }
+      if (d<=95) { applyDamageToPlayer(e.id==='finalboss'?30:26); triggerShake(14,0.35); triggerChroma(); triggerHitStop(0.07); triggerFrameFlash('rgba(229,83,75,1)', 'rgba(229,83,75,0.6)', 0.45); }
       spawnDeathBurst(e.x,e.y,'#ffffff',14);
       sfxBossAttack();
     }

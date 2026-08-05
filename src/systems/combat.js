@@ -9,7 +9,7 @@ import { ARENA_H, ARENA_W } from '../data/constants.js';
 import { dodgeCap, effectiveDamageMult, effectiveFireRateMult, effectiveRange } from '../state/derived.js';
 import { store } from '../state/store.js';
 import { killEnemy } from './enemies.js';
-import { spawnDamageText, spawnDeathBurst, spawnHitParticle, triggerShake, triggerChroma } from './particles.js';
+import { spawnDamageText, spawnDeathBurst, spawnHitParticle, triggerShake, triggerChroma, triggerFrameFlash } from './particles.js';
 import { clamp } from '../utils.js';
 
 export function updateShooting(dt){
@@ -52,7 +52,7 @@ export function updateProjectiles(dt){
         e.hp -= dmg; e.flashTime = 0.08;
         spawnHitParticle(pr.x,pr.y, pr.crit?'#f2c94c':'#ffffff');
         spawnDamageText(e.x, e.y-e.radius-4, String(dmg), pr.crit?'#f2c94c':'#eae6f0', pr.crit);
-        if (pr.crit) triggerChroma();
+        if (pr.crit){ triggerChroma(); triggerFrameFlash('rgba(242,201,76,0.9)', 'rgba(242,201,76,0.55)', 0.3); }
         if (store.game.player.lifesteal>0) store.game.player.hp = Math.min(store.game.player.maxHp, store.game.player.hp + dmg*store.game.player.lifesteal/100);
         if (store.game.player.frostChance>0 && !e.boss && Math.random()*100 < store.game.player.frostChance) e.slowTimer = 1.5;
         if (store.game.player.explosiveLevel>0) doExplosion(e.x, e.y, Math.round(dmg*0.4), e);
@@ -107,6 +107,7 @@ export function applyDamageToPlayer(dmg){
   if (store.game.enemies.some(en=>en.boss)) store.game.currentBossDamaged = true;
   spawnDamageText(p.x,p.y-22,'-'+finalDmg,'#e5534b',false);
   triggerShake(5,0.15);
+  triggerFrameFlash('rgba(229,83,75,0.9)', 'rgba(229,83,75,0.55)', 0.35);
   sfxPlayerHurt();
   return true;
 }

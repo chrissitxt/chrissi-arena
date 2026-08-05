@@ -11,7 +11,7 @@ import { store } from '../state/store.js';
 import { STORE_HISTORY, STORE_STATS, saveJSON } from '../storage.js';
 import { buildSnapshot } from './economy.js';
 import { loop } from './loop.js';
-import { spawnDamageText, triggerShake } from './particles.js';
+import { spawnDamageText, triggerShake, triggerFrameFlash } from './particles.js';
 
 export function startRun(){
   store.game = newGameState();
@@ -40,6 +40,7 @@ export function checkPlayerDeath(){
       spawnDamageText(p.x,p.y-32,'PHOENIX!','#ff9d3d',true);
       logEvent('The Phoenix Heart flares. You rise again.');
       triggerShake(12,0.4);
+      triggerFrameFlash('rgba(255,157,61,1)', 'rgba(255,157,61,0.7)', 0.8);
       sfxPhoenix();
     } else {
       endRun();

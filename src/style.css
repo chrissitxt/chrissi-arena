@@ -242,6 +242,19 @@
   @keyframes frameGlow { 0%,100%{ box-shadow: 0 0 0 2px #000, 0 0 40px rgba(126,231,135,0.06), 6px 6px 0 rgba(0,0,0,0.5);} 50%{ box-shadow: 0 0 0 2px #000, 0 0 55px rgba(126,231,135,0.14), 6px 6px 0 rgba(0,0,0,0.5);} }
   #app.boss-active #canvasFrame { animation: frameGlowBoss 1.8s ease-in-out infinite; }
   @keyframes frameGlowBoss { 0%,100%{ box-shadow: 0 0 0 2px #000, 0 0 45px rgba(229,83,75,0.22), 6px 6px 0 rgba(0,0,0,0.5);} 50%{ box-shadow: 0 0 0 2px #000, 0 0 65px rgba(229,83,75,0.4), 6px 6px 0 rgba(0,0,0,0.5);} }
+  #canvasFrame.frame-flash {
+    animation: frameFlash var(--flash-dur, 0.4s) cubic-bezier(.2,.7,.3,1);
+  }
+  @keyframes frameFlash {
+    0% {
+      border-color: var(--flash-color, var(--accent));
+      box-shadow: 0 0 0 2px #000, 0 0 6px 3px var(--flash-color, var(--accent)), 0 0 85px var(--flash-glow, rgba(126,231,135,0.7)), 6px 6px 0 rgba(0,0,0,0.5);
+    }
+    100% {
+      border-color: var(--wall-lit);
+      box-shadow: 0 0 0 2px #000, 0 0 40px rgba(126,231,135,0.06), 6px 6px 0 rgba(0,0,0,0.5);
+    }
+  }
   #canvasHolder { position:relative; background:#0d0a14; line-height:0; }
   #canvasHolder.chroma-pulse { animation: chromaPulse 0.32s ease-out; }
   @keyframes chromaPulse {

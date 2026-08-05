@@ -19,7 +19,7 @@ import { STORE_STATS, saveJSON } from '../storage.js';
 import { unlockEvent } from './achievements.js';
 import { openShop } from './economy.js';
 import { isBossWaveNow, spawnEnemy } from './enemies.js';
-import { triggerShake } from './particles.js';
+import { triggerShake, triggerFrameFlash } from './particles.js';
 import { spawnIntervalFor, waveDurationFor } from '../utils.js';
 
 export function updateWaveTimer(dt){
@@ -54,6 +54,7 @@ export function finishWave(){
   showWaveBanner(`WAVE ${clearedWave} CLEARED`);
   logEvent(`Wave ${clearedWave} cleared.`);
   sfxWaveClear();
+  triggerFrameFlash('rgba(126,231,135,1)', 'rgba(126,231,135,0.6)', 0.5);
   setTimeout(() => { if (store.running) maybeTriggerEvent(clearedWave); }, 850);
 }
 export function maybeTriggerEvent(clearedWave){
@@ -72,6 +73,7 @@ export function maybeTriggerEvent(clearedWave){
   document.getElementById('eventDesc').textContent = `${ev.desc} ${durText}`;
   logEvent(`Event: ${ev.label}. ${ev.desc} ${durText}`);
   sfxEvent(!ev.positive);
+  triggerFrameFlash(ev.positive?'rgba(126,231,135,1)':'rgba(229,83,75,1)', ev.positive?'rgba(126,231,135,0.55)':'rgba(229,83,75,0.55)', 0.5);
   showScreen('event');
 }
 export async function triggerVictory(){
@@ -79,7 +81,7 @@ export async function triggerVictory(){
   store.game.enemies = []; store.game.enemyProjectiles = []; store.game.coins = [];
   showWaveBanner('VICTORY!');
   logEvent('The Devourer falls. You have won.');
-  sfxVictory(); triggerShake(10,0.5);
+  sfxVictory(); triggerShake(10,0.5); triggerFrameFlash('rgba(199,125,255,1)', 'rgba(199,125,255,0.75)', 1.1);
   store.stats.victories = (store.stats.victories||0)+1;
   await saveJSON(STORE_STATS, store.stats);
   setTimeout(() => {

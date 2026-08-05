@@ -76,3 +76,23 @@ describe('music tempo (regression: tempo used to stay panicked forever after dea
     expect(currentTempoMs()).toBe(340); // must NOT still be panicked
   });
 });
+
+describe('triggerFrameFlash', () => {
+  it('applies the flash class and CSS custom properties to the canvas frame', async () => {
+    const { triggerFrameFlash } = await import('../src/systems/particles.js');
+    const frame = document.getElementById('canvasFrame');
+    triggerFrameFlash('rgba(1,2,3,1)', 'rgba(1,2,3,0.5)', 0.4);
+    expect(frame.classList.contains('frame-flash')).toBe(true);
+    expect(frame.style.getPropertyValue('--flash-color')).toBe('rgba(1,2,3,1)');
+    expect(frame.style.getPropertyValue('--flash-dur')).toBe('0.4s');
+  });
+
+  it('does not throw when called repeatedly in quick succession', async () => {
+    const { triggerFrameFlash } = await import('../src/systems/particles.js');
+    expect(() => {
+      triggerFrameFlash('red', 'red', 0.2);
+      triggerFrameFlash('blue', 'blue', 0.2);
+      triggerFrameFlash('green', 'green', 0.2);
+    }).not.toThrow();
+  });
+});

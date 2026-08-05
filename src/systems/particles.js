@@ -4,7 +4,7 @@
 
 import { sfxPickupGold } from '../audio/sfx.js';
 import { GOLD_CAP } from '../data/constants.js';
-import { canvasHolder } from '../dom.js';
+import { canvasHolder, canvasFrame } from '../dom.js';
 import { logEvent } from '../render/hud.js';
 import { store } from '../state/store.js';
 
@@ -25,6 +25,24 @@ export function triggerChroma(){
   canvasHolder.classList.add('chroma-pulse');
   clearTimeout(chromaTimeout);
   chromaTimeout = setTimeout(() => canvasHolder.classList.remove('chroma-pulse'), 350);
+}
+
+let frameFlashTimeout = null;
+/** Punches the arena's outer frame with a brief colored flash — the
+ * "outline lights up" reaction. `color` drives the border and the tight
+ * inner glow; `glow` is the softer, wider halo (usually the same hue at
+ * lower opacity). Called generously across many different events on
+ * purpose — this is the game's main "something just happened" signal. */
+export function triggerFrameFlash(color, glow, dur){
+  dur = dur || 0.4;
+  canvasFrame.style.setProperty('--flash-color', color);
+  canvasFrame.style.setProperty('--flash-glow', glow);
+  canvasFrame.style.setProperty('--flash-dur', dur+'s');
+  canvasFrame.classList.remove('frame-flash');
+  void canvasFrame.offsetWidth;
+  canvasFrame.classList.add('frame-flash');
+  clearTimeout(frameFlashTimeout);
+  frameFlashTimeout = setTimeout(() => canvasFrame.classList.remove('frame-flash'), dur*1000+60);
 }
 export function spawnHitParticle(x,y,color){ store.game.particles.push({x,y,vx:(Math.random()-0.5)*30,vy:(Math.random()-0.5)*30,life:0.22,maxLife:0.22,color,size:3}); }
 export function spawnDeathBurst(x,y,color,count){
