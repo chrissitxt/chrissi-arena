@@ -20,11 +20,14 @@ document.body.innerHTML = bodyMatch[1];
 // every ctx.* method render/canvas.js actually calls — grep for `ctx\.` in
 // that file and extend this list if a future change adds a new one.
 const ctxMethods = ['arc', 'beginPath', 'closePath', 'fill', 'fillRect', 'fillText',
-  'lineTo', 'measureText', 'moveTo', 'restore', 'rotate', 'save', 'stroke', 'translate'];
+  'lineTo', 'measureText', 'moveTo', 'restore', 'rotate', 'save', 'stroke', 'translate',
+  'setLineDash'];
 const ctxStub = {};
 for (const m of ctxMethods) ctxStub[m] = () => (m === 'measureText' ? { width: 0 } : undefined);
-['fillStyle', 'font', 'globalAlpha', 'lineWidth', 'strokeStyle', 'textAlign'].forEach(prop => {
+['fillStyle', 'font', 'globalAlpha', 'lineWidth', 'strokeStyle', 'textAlign',
+  'shadowBlur', 'shadowColor'].forEach(prop => {
   ctxStub[prop] = '';
 });
+ctxStub.createRadialGradient = () => ({ addColorStop: () => undefined });
 HTMLCanvasElement.prototype.getContext = () => ctxStub;
 

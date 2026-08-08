@@ -1,7 +1,6 @@
-// Random wave-clear events. Every event is temporary: `apply(p)` runs once
-// when it triggers, and `revert(p)` must exactly undo it — the duration
-// (1-4 waves, chosen at random) is tracked separately in game state, not
-// here. Keep apply/revert as exact inverses, same rule as items.js.
+// random wave-clear events, all temporary. apply(p) runs once on
+// trigger, revert(p) has to undo it exactly. duration (1-4 waves,
+// random) is tracked separately in game state, not here
 
 export const EVENTS = [
   { id:'adrenalinerush', label:'Adrenaline Rush', positive:true, desc:'+20% damage.', apply:p=>{p.damage*=1.2;}, revert:p=>{p.damage/=1.2;} },

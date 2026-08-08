@@ -1,15 +1,14 @@
-// Player-side combat each frame: movement, auto-aim/auto-fire, projectile
-// travel and collision, explosive/chain/orbit-blade/bomb secondary damage,
-// and damage taken. All of the "effective" stat lookups (range, damage
-// multiplier, fire-rate multiplier) come from state/derived.js so idle
-// and empty-slot bonuses are always current.
+// player combat each frame: movement, auto-aim/fire, projectiles,
+// explosive/chain/orbit/bomb damage, and damage taken. the "effective"
+// stat lookups come from state/derived.js so idle and empty-slot
+// bonuses stay current
 
 import { sfxExplosion, sfxPlayerHurt, sfxShoot } from '../audio/sfx.js';
 import { ARENA_H, ARENA_W } from '../data/constants.js';
-import { dodgeCap, effectiveDamageMult, effectiveFireRateMult, effectiveRange } from '../state/derived.js';
+import { dodgeCap, effectiveDamageMult, effectiveDamage, effectiveFireRateMult, effectiveRange, lifestealCap, emptySlotDamageBonus, commonSynergyDamageBonus } from '../state/derived.js';
 import { store } from '../state/store.js';
 import { killEnemy } from './enemies.js';
-import { spawnDamageText, spawnDeathBurst, spawnHitParticle, triggerShake, triggerChroma, triggerFrameFlash } from './particles.js';
+import { spawnDamageText, spawnDeathBurst, spawnHitParticle, triggerShake, triggerFrameFlash } from './particles.js';
 import { clamp } from '../utils.js';
 
 export function updateShooting(dt){
@@ -25,13 +24,14 @@ export function updateShooting(dt){
   const spread = Math.min(0.6, n*0.07);
   const effCrit = Math.max(0, p.critChance);
   const dmgMult = effectiveDamageMult();
+  const flatDmgBonus = emptySlotDamageBonus() + commonSynergyDamageBonus();
   for (let i=0;i<n;i++){
     const off = n===1 ? 0 : (i/(n-1)-0.5)*spread;
     const ang = baseAngle+off;
-    let dmg = p.damage * dmgMult;
+    let dmg = p.damage * dmgMult + flatDmgBonus;
     if (p.berserkerBonus>0 && p.hp < p.maxHp*0.5) dmg *= (1+p.berserkerBonus/100);
     const isCrit = Math.random()*100 < effCrit;
-    store.game.projectiles.push({ x:p.x, y:p.y, px:p.x, py:p.y, vx:Math.cos(ang)*520, vy:Math.sin(ang)*520, dmg, crit:isCrit, pierceLeft:p.pierce, life:1.3 });
+    store.game.projectiles.push({ x:p.x, y:p.y, px:p.x, py:p.y, vx:Math.cos(ang)*520, vy:Math.sin(ang)*520, dmg, crit:isCrit, pierceLeft:p.pierce, life:effectiveRange()/520 });
   }
   sfxShoot();
 }
@@ -52,10 +52,12 @@ export function updateProjectiles(dt){
         e.hp -= dmg; e.flashTime = 0.08;
         spawnHitParticle(pr.x,pr.y, pr.crit?'#f2c94c':'#ffffff');
         spawnDamageText(e.x, e.y-e.radius-4, String(dmg), pr.crit?'#f2c94c':'#eae6f0', pr.crit);
-        if (pr.crit){ triggerChroma(); triggerFrameFlash('rgba(242,201,76,0.9)', 'rgba(242,201,76,0.55)', 0.3); }
-        if (store.game.player.lifesteal>0) store.game.player.hp = Math.min(store.game.player.maxHp, store.game.player.hp + dmg*store.game.player.lifesteal/100);
+        if (store.game.player.lifesteal>0) store.game.player.hp = Math.min(store.game.player.maxHp, store.game.player.hp + dmg*Math.min(lifestealCap(),store.game.player.lifesteal)/100*(store.game.player.hexedTimer>0?0.25:1));
         if (store.game.player.frostChance>0 && !e.boss && Math.random()*100 < store.game.player.frostChance) e.slowTimer = 1.5;
-        if (store.game.player.explosiveLevel>0) doExplosion(e.x, e.y, Math.round(dmg*0.4), e);
+        if (store.game.player.explosiveLevel>0){
+          const lvl = store.game.player.explosiveLevel;
+          doExplosion(e.x, e.y, Math.round(dmg*(0.4+(lvl-1)*0.08)), e, 58+(lvl-1)*12);
+        }
         if (store.game.player.chainCount>0) doChain(e, dmg, store.game.player.chainCount, new Set([e]));
         if (e.hp<=0) killEnemy(e);
         if (pr.pierceLeft>0) pr.pierceLeft -= 1; else arr.splice(i,1);
@@ -65,10 +67,11 @@ export function updateProjectiles(dt){
   }
   store.game.enemies = store.game.enemies.filter(e=>e.hp>0);
 }
-export function doExplosion(x,y,dmg,exclude){
+export function doExplosion(x,y,dmg,exclude,radius){
+  radius = radius || 58;
   for (const o of store.game.enemies){
     if (o===exclude||o.hp<=0||o.phased||!o.revealed) continue;
-    if (Math.hypot(o.x-x,o.y-y) < 58){
+    if (Math.hypot(o.x-x,o.y-y) < radius){
       o.hp -= dmg; o.flashTime = 0.08;
       spawnHitParticle(o.x,o.y,'#ff9d3d');
       if (o.hp<=0) killEnemy(o);
@@ -127,9 +130,15 @@ export function updateOrbitWeapons(dt){
   const count = p.orbitCount||0;
   store.game.orbitBlades = [];
   if (count<=0) return;
-  store.game.orbitAngle = (store.game.orbitAngle||0) + dt*2.4;
+  // rotation speed and per-target cooldown both scale gently with attack
+  // speed, so fire-rate investment helps a blade build the same way it
+  // helps a gun build instead of blades being a flat tickrate
+  const spinSpeed = 4.2 * Math.max(0.6, Math.min(2, p.fireRate/1.6));
+  store.game.orbitAngle = (store.game.orbitAngle||0) + dt*spinSpeed;
   const radius = 48;
-  const dmgPerHit = Math.max(3, Math.round(p.damage*0.4));
+  const baseDmg = Math.max(4, Math.round(effectiveDamage()*0.5));
+  const effCrit = Math.max(0, p.critChance);
+  const cooldown = Math.max(0.16, 0.35 / Math.max(0.6, Math.min(2, p.fireRate/1.6)));
   for (let i=0;i<count;i++){
     const ang = store.game.orbitAngle + (i/count)*Math.PI*2;
     const bx = p.x + Math.cos(ang)*radius, by = p.y + Math.sin(ang)*radius;
@@ -141,10 +150,15 @@ export function updateOrbitWeapons(dt){
       if ((e.orbitCooldown[key]||0) > 0) continue;
       const d = Math.hypot(e.x-bx, e.y-by);
       if (d < e.radius+9){
-        e.hp -= dmgPerHit; e.flashTime = 0.08;
-        spawnHitParticle(bx,by,'#c9c9d8');
-        spawnDamageText(e.x, e.y-e.radius-4, String(dmgPerHit), '#c9c9d8', false);
-        e.orbitCooldown[key] = 0.35;
+        // blades go through the same crit/lifesteal pipeline as gunfire
+        // now, so investing in either actually helps a melee build too
+        const isCrit = Math.random()*100 < effCrit;
+        const dmg = isCrit ? Math.round(baseDmg*p.critMult) : baseDmg;
+        e.hp -= dmg; e.flashTime = 0.08;
+        if (p.lifesteal>0) p.hp = Math.min(p.maxHp, p.hp + dmg*Math.min(lifestealCap(),p.lifesteal)/100*(p.hexedTimer>0?0.25:1));
+        spawnHitParticle(bx,by, isCrit?'#f2c94c':'#c9c9d8');
+        spawnDamageText(e.x, e.y-e.radius-4, String(dmg), isCrit?'#f2c94c':'#c9c9d8', isCrit);
+        e.orbitCooldown[key] = cooldown;
         if (e.hp<=0){ killEnemy(e); }
       }
     }
@@ -187,6 +201,24 @@ export function updatePlayerBombs(dt){
     }
   }
   store.game.enemies = store.game.enemies.filter(e=>e.hp>0);
+}
+// lingering hazard left behind by a cursed enemy's death, ticks damage
+// every 0.5s while standing in it. rewards paying attention to where
+// a cursed pack dies, not just clearing through it
+export function updateCurseZones(dt){
+  const p = store.game.player;
+  const arr = store.game.curseZones;
+  for (let i=arr.length-1;i>=0;i--){
+    const z = arr[i];
+    z.life -= dt;
+    if (z.life<=0){ arr.splice(i,1); continue; }
+    z.tickTimer -= dt;
+    if (z.tickTimer<=0 && Math.hypot(p.x-z.x,p.y-z.y) < z.radius){
+      z.tickTimer = 0.5;
+      applyDamageToPlayer(4 + Math.round(store.game.wave*0.15));
+      spawnDamageText(p.x, p.y-30, 'CURSED', '#c07dff', false);
+    }
+  }
 }
 export function updatePlayerMovement(dt){
   const p = store.game.player;

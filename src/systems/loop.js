@@ -1,21 +1,33 @@
-// The single requestAnimationFrame loop and the per-frame update
-// orchestrator. This is the one place that decides what runs each frame
-// and in what order — if you add a new per-frame system, it gets wired
-// in here, once.
+// the one requestAnimationFrame loop and the per-frame update order.
+// new per-frame systems get wired in here, once
 
 import { gameWrap } from '../dom.js';
 import { render } from '../render/canvas.js';
 import { store } from '../state/store.js';
-import { updateOrbitWeapons, updatePlayerBombs, updatePlayerMovement, updateProjectiles, updateShooting } from './combat.js';
+import { updateOrbitWeapons, updatePlayerBombs, updatePlayerMovement, updateProjectiles, updateShooting, updateCurseZones } from './combat.js';
 import { updateEnemies, updateEnemyProjectiles } from './enemies.js';
 import { updateChainLines, updateCoins, updateDamageTexts, updateParticles } from './particles.js';
-import { checkPlayerDeath } from './run.js';
+import { checkPlayerDeath, quitToMenu } from './run.js';
 import { updateWaveTimer } from './wave.js';
 
 let fpsFrames = 0, fpsTimer = 0;
+let consecutiveErrors = 0;
+
+// browsers deliberately pause requestAnimationFrame entirely for
+// backgrounded tabs, standard across every major browser now, no page
+// can opt out, it's a battery/security thing. best mitigation: fall
+// back to setTimeout while hidden, still allowed to fire (heavily
+// throttled, roughly once a second) instead of going dark until refocus
+export function scheduleNextFrame(){
+  if (typeof document !== 'undefined' && document.hidden){
+    store.animHandle = setTimeout(() => loop(performance.now()), 250);
+  } else {
+    store.animHandle = requestAnimationFrame(loop);
+  }
+}
 
 export function loop(now){
-  store.animHandle = requestAnimationFrame(loop);
+  scheduleNextFrame();
   if (!store.running || store.paused || gameWrap.classList.contains('hidden')) { store.lastFrameTime = now; return; }
   let elapsed = now - store.lastFrameTime;
   if (!store.settings.vsyncOn){
@@ -32,8 +44,24 @@ export function loop(now){
     if (store.settings.showFps) document.getElementById('fpsCounter').textContent = 'FPS: '+fps;
   }
 
-  try { update(dt); render(); }
-  catch (err) { console.error('chrissi-arena frame error (recovered):', err); }
+  try {
+    update(dt); render();
+    consecutiveErrors = 0;
+  } catch (err) {
+    console.error('chrissi-arena frame error (recovered):', err);
+    consecutiveErrors++;
+    // a single bad frame is recoverable, shouldn't interrupt play. but
+    // if every frame is throwing, the run's stuck in a way this loop
+    // can't recover from alone, better to visibly bail to the menu
+    // than sit there doing nothing forever (used to mean an F5 refresh
+    // with zero indication anything went wrong)
+    if (consecutiveErrors >= 8){
+      consecutiveErrors = 0;
+      store.running = false;
+      alert("Something went wrong and the run couldn't continue. Returning to the main menu — sorry about that.");
+      quitToMenu();
+    }
+  }
 }
 export function update(dt){
   if (!store.game || store.game.over) return;
@@ -43,6 +71,7 @@ export function update(dt){
   const p = store.game.player;
   if (p.invulnTime>0) p.invulnTime -= dt;
   if (p.jamTimer>0) p.jamTimer -= dt;
+  if (p.hexedTimer>0) p.hexedTimer -= dt;
   if (p.regen>0 && p.hp<p.maxHp) p.hp = Math.min(p.maxHp, p.hp + p.regen*dt);
 
   updatePlayerMovement(dt);
@@ -50,6 +79,7 @@ export function update(dt){
   updateProjectiles(dt);
   updateOrbitWeapons(dt);
   updatePlayerBombs(dt);
+  updateCurseZones(dt);
   updateEnemies(dt);
   updateEnemyProjectiles(dt);
   updateCoins(dt);

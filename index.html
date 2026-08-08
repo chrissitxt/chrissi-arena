@@ -30,9 +30,10 @@
       <button class="menu-btn" id="btnStart">Start <span class="arrow">&#9654;</span></button>
       <button class="menu-btn" id="btnCompendium">Compendium <span class="arrow">&#9654;</span></button>
       <button class="menu-btn" id="btnStats">Statistics <span class="arrow">&#9654;</span></button>
+      <button class="menu-btn" id="btnRoadmap">Roadmap <span class="arrow">&#9654;</span></button>
       <button class="menu-btn" id="btnSettings">Settings <span class="arrow">&#9654;</span></button>
     </div>
-    <div id="versionTag">v0.8.0-beta &middot; changelog</div>
+    <div id="versionTag">v0.4.0-beta &middot; changelog</div>
     <div id="cheatToast" class="hidden" style="position:absolute; bottom:44px; left:50%; transform:translateX(-50%); color:var(--accent); font-size:11px; background:rgba(10,8,16,0.8); border:1px solid var(--wall-lit); padding:6px 14px; letter-spacing:0.5px;">Compendium fully unlocked!</div>
   </div>
 
@@ -139,6 +140,70 @@
     </div>
   </div>
 
+  <!-- ROADMAP -->
+  <div id="screenRoadmap" class="screen hidden">
+    <div class="panel-box" style="width:min(640px,92vw);">
+      <div class="panel-header"><h2>ROADMAP</h2><button class="backbtn" id="btnRoadmapBack">&larr; Back</button></div>
+
+      <div class="tip-card">
+        <div class="tip-card-sparkle tip-sparkle-1">&#10022;</div>
+        <div class="tip-card-sparkle tip-sparkle-2">&#10022;</div>
+        <div class="tip-card-sparkle tip-sparkle-3">&#10022;</div>
+        <div class="tip-card-text">
+          <div class="tip-card-title">Support me</div>
+          <p class="tip-card-desc">I build chrissi's Arena in my free time, around everything else going on in life. If you enjoy playing it, a tip helps me keep putting time into it and keep doing the thing I actually enjoy doing.</p>
+        </div>
+        <a id="tipLink" class="tip-card-btn" href="https://paypal.me/jetztpayendlich" target="_blank" rel="noopener noreferrer"><span>Tip</span></a>
+      </div>
+
+      <div class="roadmap-phase-counter">PHASE 2 OF 5</div>
+      <div class="roadmap-timeline">
+        <div class="roadmap-stage roadmap-stage-done">
+          <div class="roadmap-dot roadmap-dot-done">&#10003;</div>
+          <div class="roadmap-stage-body">
+            <div class="roadmap-stage-title">Phase 1: Prototype</div>
+            <div class="roadmap-stage-desc">A single HTML file, built to prove the core idea worked: auto-fire, movement-only controls, a shop between waves. It did. That first version still lives in the repo, for anyone curious where this started.</div>
+          </div>
+        </div>
+        <div class="roadmap-stage roadmap-stage-current">
+          <div class="roadmap-dot roadmap-dot-current">&#9679;</div>
+          <div class="roadmap-stage-body">
+            <div class="roadmap-stage-title">Phase 2: Foundation (current)</div>
+            <div class="roadmap-stage-desc">That single file got rebuilt from scratch into a proper, organized codebase, tested and open source on GitHub. A steady stream of bug fixes and balance passes based on real playtesting, plus the tools (compendium, guide, stat transparency) needed to keep improving everything that comes after this.</div>
+          </div>
+        </div>
+        <div class="roadmap-stage">
+          <div class="roadmap-dot"></div>
+          <div class="roadmap-stage-body">
+            <div class="roadmap-stage-title">Phase 3: Content Expansion</div>
+            <div class="roadmap-stage-desc">More items, enemies, and bosses. Deeper variety in how a run can play out.</div>
+          </div>
+        </div>
+        <div class="roadmap-stage">
+          <div class="roadmap-dot"></div>
+          <div class="roadmap-stage-body">
+            <div class="roadmap-stage-title">Phase 4: Systems and Depth</div>
+            <div class="roadmap-stage-desc">Ideas on the table: meta-progression between runs, additional modes, more build variety. Nothing locked in yet.</div>
+          </div>
+        </div>
+        <div class="roadmap-stage roadmap-stage-goal">
+          <div class="roadmap-dot roadmap-dot-goal">&#9733;</div>
+          <div class="roadmap-stage-body">
+            <div class="roadmap-stage-title">Phase 5: Release Prep (the goal)</div>
+            <div class="roadmap-stage-desc">Final polish, everything a real release needs beyond just the game itself. This is the actual target I am working toward.</div>
+          </div>
+        </div>
+        <div class="roadmap-stage roadmap-stage-stretch">
+          <div class="roadmap-dot roadmap-dot-stretch">&#10024;</div>
+          <div class="roadmap-stage-body">
+            <div class="roadmap-stage-title">Stretch Goal: Steam Release</div>
+            <div class="roadmap-stage-desc">Targeting Q4 2027, no later than early 2028, but this is not a promise. As a solo hobby project, this is where I would love to end up, not a date I am committing to.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- GAMEPLAY -->
   <div id="gameWrap" class="hidden">
     <div class="side-panel" id="leftPanel">
@@ -146,7 +211,7 @@
       <div class="stat-row-sm"><span class="lbl">Wave</span><span id="waveLabel">1</span></div>
       <div class="stat-row-sm"><span class="lbl">Score</span><span id="scoreLabel">0</span></div>
       <div>
-        <div class="stat-row-sm"><span class="lbl">HP</span><span id="hpLabel">100/100</span></div>
+        <div class="stat-row-sm" data-statkey="maxHp"><span class="lbl">HP</span><span id="hpLabel">100/100</span></div>
         <div class="bar-outer"><div class="bar-inner bar-hp" id="hpBar" style="width:100%"></div></div>
       </div>
       <div>
@@ -158,15 +223,17 @@
         <div id="activeEventText" style="font-size:10px; line-height:1.5;"></div>
       </div>
       <div class="panel-title" style="margin-top:6px;">BUILD STATS</div>
-      <div class="stat-row-sm"><span class="lbl">Damage</span><span id="statDamage">-</span></div>
-      <div class="stat-row-sm"><span class="lbl">Range</span><span id="statRange">-</span></div>
-      <div class="stat-row-sm"><span class="lbl">Fire rate</span><span id="statFireRate">-</span></div>
-      <div class="stat-row-sm"><span class="lbl">Move speed</span><span id="statSpeed">-</span></div>
-      <div class="stat-row-sm"><span class="lbl">Armor</span><span id="statArmor">-</span></div>
-      <div class="stat-row-sm"><span class="lbl">Crit</span><span id="statCrit">-</span></div>
-      <div class="stat-row-sm"><span class="lbl">Lifesteal</span><span id="statLifesteal">-</span></div>
-      <div class="stat-row-sm"><span class="lbl">Dodge</span><span id="statDodge">-</span></div>
-      <div class="stat-row-sm"><span class="lbl">Pickup range</span><span id="statPickup">-</span></div>
+      <div class="stat-row-sm" data-statkey="damage"><span class="lbl">Damage</span><span id="statDamage">-</span></div>
+      <div class="stat-row-sm" data-statkey="range"><span class="lbl">Range</span><span id="statRange">-</span></div>
+      <div class="stat-row-sm" data-statkey="fireRate"><span class="lbl">Fire rate</span><span id="statFireRate">-</span></div>
+      <div class="stat-row-sm" data-statkey="moveSpeed"><span class="lbl">Move speed</span><span id="statSpeed">-</span></div>
+      <div class="stat-row-sm" data-statkey="armor"><span class="lbl">Armor</span><span id="statArmor">-</span></div>
+      <div class="stat-row-sm" data-statkey="critChance"><span class="lbl">Crit chance</span><span id="statCritChance">-</span></div>
+      <div class="stat-row-sm" data-statkey="critMult"><span class="lbl">Crit damage</span><span id="statCritMult">-</span></div>
+      <div class="stat-row-sm" data-statkey="lifesteal"><span class="lbl">Lifesteal</span><span id="statLifesteal">-</span></div>
+      <div class="stat-row-sm" data-statkey="dodgeChance"><span class="lbl">Dodge</span><span id="statDodge">-</span></div>
+      <div class="stat-row-sm" data-statkey="pickupRadius"><span class="lbl">Pickup range</span><span id="statPickup">-</span></div>
+      <div class="stat-row-sm" data-statkey="cursedStat"><span class="lbl">Cursed</span><span id="statCursed">-</span></div>
     </div>
 
     <div id="arenaFrame">
@@ -228,13 +295,28 @@
     <div class="stat-row-sm" style="color:var(--gold); font-size:14px; font-weight:700;" id="shopGoldFlash"><span id="shopGold">&#9679; 0 gold</span></div>
     <div class="shop-cards" id="shopCards"></div>
     <div class="shop-controls">
-      <button class="bigbtn secondary" id="btnReroll">Reroll (<span id="rerollCost">Free</span>)</button>
+      <button class="bigbtn secondary" id="btnReroll">Reroll (<span id="rerollCost" style="color:var(--gold); font-weight:700;">Free</span>)</button>
       <button class="bigbtn" id="btnContinue">Continue &#9654;</button>
+    </div>
+    <div class="shop-build-section">
+      <div class="panel-title">YOUR STATS</div>
+      <div class="shop-stats-grid">
+        <div class="stat-row-sm" data-statkey="damage"><span class="lbl">Damage</span><span id="shopStatDamage">-</span></div>
+        <div class="stat-row-sm" data-statkey="range"><span class="lbl">Range</span><span id="shopStatRange">-</span></div>
+        <div class="stat-row-sm" data-statkey="fireRate"><span class="lbl">Fire rate</span><span id="shopStatFireRate">-</span></div>
+        <div class="stat-row-sm" data-statkey="moveSpeed"><span class="lbl">Move speed</span><span id="shopStatSpeed">-</span></div>
+        <div class="stat-row-sm" data-statkey="armor"><span class="lbl">Armor</span><span id="shopStatArmor">-</span></div>
+        <div class="stat-row-sm" data-statkey="critChance"><span class="lbl">Crit chance</span><span id="shopStatCritChance">-</span></div>
+        <div class="stat-row-sm" data-statkey="critMult"><span class="lbl">Crit damage</span><span id="shopStatCritMult">-</span></div>
+        <div class="stat-row-sm" data-statkey="lifesteal"><span class="lbl">Lifesteal</span><span id="shopStatLifesteal">-</span></div>
+        <div class="stat-row-sm" data-statkey="dodgeChance"><span class="lbl">Dodge</span><span id="shopStatDodge">-</span></div>
+        <div class="stat-row-sm" data-statkey="pickupRadius"><span class="lbl">Pickup range</span><span id="shopStatPickup">-</span></div>
+      </div>
     </div>
     <div class="shop-build-section">
       <div class="panel-title">YOUR BUILD (<span id="shopBuildCount">0</span>/<span id="shopBuildCap">12</span>)</div>
       <div id="shopBuildGrid"></div>
-      <div class="shop-build-hint">Click an item (marked SELL) to sell it back for half its price and free a slot.</div>
+      <div class="shop-build-hint">Click an item to sell it for half of its price.</div>
     </div>
   </div>
 
@@ -246,6 +328,20 @@
       <div class="stat-tile"><div class="val" id="victoryWave">30</div><div class="lbl">WAVE REACHED</div></div>
       <div class="stat-tile"><div class="val" id="victoryScore">0</div><div class="lbl">SCORE</div></div>
     </div>
+    <div class="postrun-panels">
+      <div class="postrun-col">
+        <div class="postrun-title">FINAL BUILD</div>
+        <div id="victoryBuildGrid" class="postrun-build-grid"></div>
+      </div>
+      <div class="postrun-col">
+        <div class="postrun-title">FINAL STATS</div>
+        <div id="victoryStatsGrid" class="shop-stats-grid"></div>
+      </div>
+      <div class="postrun-col">
+        <div class="postrun-title">RUN LOG</div>
+        <div id="victoryEventLog" class="postrun-log"></div>
+      </div>
+    </div>
     <div class="menu-col">
       <button class="bigbtn" id="btnContinueEndless">Continue (Endless Mode)</button>
       <button class="bigbtn secondary" id="btnVictoryMenu">Main Menu</button>
@@ -254,7 +350,8 @@
 
   <!-- GAME OVER -->
   <div id="screenGameOver" class="screen hidden">
-    <div class="logo" style="font-size:22px; filter: drop-shadow(2px 2px 0 #000); background:none; -webkit-text-fill-color: var(--danger); color: var(--danger); animation:none;">YOU FELL</div>
+    <div class="logo" style="font-size:22px; filter: drop-shadow(2px 2px 0 #000); background:none; -webkit-text-fill-color: var(--danger); color: var(--danger); animation:none;">YOU DIED</div>
+    <div id="goDeathQuip" style="color:var(--dim); font-size:11px; font-style:italic; margin-top:-4px;"></div>
     <div id="goVictoryTag" class="hidden" style="color:var(--legendary); font-size:11px; letter-spacing:1px;">&#9733; Victory achieved this run</div>
     <div id="newBestBanner" class="newbest hidden">&#9733; NEW BEST SCORE &#9733;</div>
     <div class="stat-grid" style="width:400px;">
@@ -262,6 +359,20 @@
       <div class="stat-tile"><div class="val" id="goScore">0</div><div class="lbl">SCORE</div></div>
       <div class="stat-tile"><div class="val" id="goKills">0</div><div class="lbl">KILLS</div></div>
       <div class="stat-tile"><div class="val" id="goGold">0</div><div class="lbl">GOLD EARNED</div></div>
+    </div>
+    <div class="postrun-panels">
+      <div class="postrun-col">
+        <div class="postrun-title">FINAL BUILD</div>
+        <div id="goBuildGrid" class="postrun-build-grid"></div>
+      </div>
+      <div class="postrun-col">
+        <div class="postrun-title">FINAL STATS</div>
+        <div id="goStatsGrid" class="shop-stats-grid"></div>
+      </div>
+      <div class="postrun-col">
+        <div class="postrun-title">RUN LOG</div>
+        <div id="goEventLog" class="postrun-log"></div>
+      </div>
     </div>
     <div class="menu-col">
       <button class="bigbtn" id="btnRetry">Retry</button>

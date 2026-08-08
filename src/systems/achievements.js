@@ -1,7 +1,7 @@
-// Compendium unlock bookkeeping. Called from systems/enemies.js (boss
-// kills) and systems/wave.js (event triggers) — never call
-// saveJSON(STORE_COMPENDIUM, ...) anywhere else, or an unlock could be
-// lost to a race between two concurrent saves.
+// compendium unlock bookkeeping, called from systems/enemies.js (boss
+// kills) and systems/wave.js (event triggers). don't call
+// saveJSON(STORE_COMPENDIUM, ...) anywhere else or an unlock can get
+// lost to a race between two saves
 
 import { sfxAchievement } from '../audio/sfx.js';
 import { ACHIEVEMENTS } from '../data/achievements.js';

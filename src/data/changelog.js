@@ -1,10 +1,57 @@
-// Version history shown in the in-game changelog screen. Newest first.
+// version history for the in-game changelog, newest first.
 //
-// House rule: when an entry adds items or enemies, list their names only —
-// never describe what they do. That's for the player to find out.
+// house rule: when adding items or enemies, just list names, never
+// describe what they do. that's for players to find out
 
 export const CHANGELOG = [
-  { version:'0.8.0-beta', notes:[
+  { version:'0.4.0-beta', date:'8. August 2026', notes:[
+    'Fixed recomputePlayerStats() never reapplying an active wave event: buying or selling any item while an event was active silently erased its entire effect until the event expired on its own',
+    "Fixed Minimalist's Edge and Collector's Charm not actually affecting the damage you deal in combat at all — only the displayed number pretended they were working",
+    'Fixed the shop lock toggle: an absolutely-positioned overlay button was conflicting with other card content and swallowing clicks; rebuilt as part of the normal card layout so it cannot collide with anything again',
+    'Fixed the item-sell tooltip on the right-panel build grid showing the wrong value (a second, separate implementation of the tooltip wiring was missing two of its five arguments)',
+    'Fixed the rarity odds text in the Guide: Cursed and Legendary were swapped between the name list and the percentage list, so a reader matching positions by order got their actual odds backwards',
+    "Fixed the death-screen run log rendering at a fixed 160px height regardless of its sibling panels' actual height, making it look half-empty next to a taller Final Build or Final Stats column",
+    'Fixed a happy-dom quirk (not a browser bug, but the fix removes the risk entirely either way) where assigning the number 0 to an element\u2019s textContent produced an empty string instead of "0", by making every stat formatter return a real string',
+    'Fixed a bug where selling items in a certain order could leave your stats permanently wrong for the rest of the run',
+    'Fixed a freeze that could happen when starting a new run right after a previous one ended',
+    'Fixed several items not working the way their description implied',
+    'Reworked Minimalist\'s Edge and Collector\'s Charm from percentage-based damage multipliers to flat, round-number bonuses: +1 damage per empty build slot, +1 damage per common item owned',
+    "Reworked Resonance Core into Echo Core: instead of silently doubling every future purchase forever, it now doubles exactly the next eligible purchase (never cursed or legendary items, never itself), then is consumed and removed from your build",
+    'Reworked Pierce from a stacking numeric stat (Piercing Rounds, plus a bonus on Thousand Cuts) into a fixed, one-time unlock from a new legendary item; Piercing Rounds removed, Thousand Cuts no longer grants pierce',
+    'Reworked Overreach: instead of just raising your legendary cap so you could hold two different legendaries, it now specifically lets you own a second copy of one legendary you already have',
+    'Projectiles now stop exactly at your Range stat, regardless of Pierce — they previously flew for a fixed distance (~676px) independent of Range entirely',
+    'Added a 75% cap on Lifesteal, matching the existing Dodge cap',
+    'Added a stack limit of 4 copies for any non-legendary item',
+    'Reroll pricing reworked: the free first reroll is gone, the base price is now 1 gold and doubles with every reroll in a visit (1, 2, 4, 8...), and that base price itself doubles again every boss wave',
+    'Buying or rerolling without enough gold now tells you so, instead of doing nothing',
+    'The shop can no longer offer the same item twice in one visit',
+    'Added the ability to lock a shop item against your next reroll',
+    'Cursed items can no longer be sold or appear discounted, and cost more',
+    'The more cursed items you own, the more dangerous your enemies become',
+    'Added two Cursed-enemy-specific mechanics beyond their stat boost: a hit from one temporarily cuts your Lifesteal effectiveness to 25%, and killing one leaves a lingering damage zone behind',
+    'Rebalanced item power, rarity odds, and the gold economy across the board',
+    "Added Collector's Charm",
+    "Added Impaler's Lance",
+    'Removed Whirlwind Pact',
+    'Most left-panel stats (Range, Move Speed, Crit Damage, Pickup Range) now show how far you\u2019ve moved from a hidden default instead of the raw number, and that default is never revealed anywhere, including on hover; Damage and Fire Rate are the deliberate exceptions and always show your real total',
+    'You can now see exactly how your stats are built up, both during a run and in the shop, and preview how an item would change them before buying',
+    'The stat breakdown tooltip now shows an active wave event as its own contributing row, alongside items',
+    'Added a Max HP row to the left panel with a working breakdown tooltip; HP is now shown above your character at all times',
+    'Boss health increased significantly across the board',
+    'Wave-5 boss health capped at 400',
+    'A boss fight that drags on too long now makes the boss increasingly dangerous instead of eventually letting you slip past it',
+    'The boss you face every 5th wave is now chosen at random from a much larger pool, instead of a fixed rotation',
+    'Added 5 new bosses',
+    'Added War Totem and Mimic',
+    'A wave timer now pulses and gives a one-time audio cue in its final 5 seconds',
+    'A distinct sound now plays whenever a legendary offer appears in the shop',
+    'Orbit blade visual spin speed nearly doubled',
+    'Death screen renamed from "YOU FELL" to "YOU DIED", with a random line underneath',
+    'Both the death and victory screens now show your final build, final stats, and full run log',
+    'Compendium items and events are now sorted alphabetically within their sections; enemies and titans stay sorted by the wave they first appear on',
+    'Added a Roadmap screen and a way to tip me, both from the main menu',
+  ] },
+  { version:'0.3.0-beta', date:'1. August 2026', notes:[
     'Rebuilt the game from a single 2,500-line file into a properly organized, modular codebase, necessary for the game to keep growing without accumulating bugs in stranger and stranger places',
     'Fixed item tooltips appearing in the wrong position',
     'Fixed the Compendium failing to open',

@@ -1,8 +1,6 @@
-// The single canvas render pass. This function ONLY reads state and draws
-// — it never mutates game state. That one-directional rule (systems
-// change state, render reads it) is the core fix from the architecture
-// review: the original prototype's two worst bugs both came from state
-// being written from more than one place with no clear owner.
+// the render pass, only reads state and draws, never mutates. that
+// one-way rule (systems change state, render reads it) is what fixed
+// the original prototype's worst bugs
 
 import { ARENA_H, ARENA_W } from '../data/constants.js';
 import { ctx } from '../dom.js';
@@ -68,6 +66,10 @@ export function render(){
       ctx.strokeStyle = 'rgba(120,190,255,0.85)'; ctx.lineWidth=3;
       ctx.beginPath(); ctx.arc(e.x,e.y,e.radius+5,0,Math.PI*2); ctx.stroke();
     }
+    if (e.cursed){
+      ctx.strokeStyle = 'rgba(255,45,85,0.55)'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(e.x,e.y,e.radius+4,0,Math.PI*2); ctx.stroke();
+    }
     ctx.globalAlpha = 1;
     const pct = Math.max(0, e.hp/e.maxHp);
     ctx.fillStyle='#000'; ctx.fillRect(e.x-e.radius, e.y-e.radius-9, e.radius*2, 4);
@@ -93,6 +95,16 @@ export function render(){
   ctx.globalAlpha = blink ? 1 : 0.35;
   ctx.fillStyle = '#7ee787'; ctx.beginPath(); ctx.arc(p.x,p.y,p.radius,0,Math.PI*2); ctx.fill();
   ctx.globalAlpha = 1;
+  if (p.hexedTimer>0){
+    ctx.strokeStyle = 'rgba(255,45,85,0.7)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.radius+5,0,Math.PI*2); ctx.stroke();
+  }
+
+  const hpPct = p.hp/p.maxHp;
+  ctx.fillStyle = hpPct<0.3 ? '#e5534b' : (hpPct<0.6 ? '#f2c94c' : '#7ee787');
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(`${Math.max(0,Math.ceil(p.hp))}/${Math.round(p.maxHp)}`, p.x, p.y-p.radius-8);
 
   if (store.game.orbitBlades && store.game.orbitBlades.length){
     for (const b of store.game.orbitBlades){
@@ -117,6 +129,20 @@ export function render(){
       ctx.beginPath(); ctx.arc(b.x,b.y,3,0,Math.PI*2); ctx.fill();
       ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(b.x,b.y,11,-Math.PI/2,-Math.PI/2+Math.PI*2*(1-pct)); ctx.stroke();
+    }
+  }
+
+  if (store.game.curseZones && store.game.curseZones.length){
+    for (const z of store.game.curseZones){
+      const pulse = 0.75 + Math.sin(performance.now()/220 + z.x)*0.1;
+      const fade = Math.min(1, z.life/3);
+      ctx.globalAlpha = fade*0.5;
+      ctx.fillStyle = '#c07dff';
+      ctx.beginPath(); ctx.arc(z.x,z.y,z.radius*pulse,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha = fade*0.8;
+      ctx.strokeStyle = '#ff2d55'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(z.x,z.y,z.radius*pulse,0,Math.PI*2); ctx.stroke();
+      ctx.globalAlpha = 1;
     }
   }
 

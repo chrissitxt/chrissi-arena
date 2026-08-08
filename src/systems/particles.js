@@ -1,24 +1,24 @@
-// Purely visual/feel state: screen shake, hit sparks, death bursts,
-// floating damage numbers, chain-lightning line segments, and gold-coin
-// pickup movement. None of this affects gameplay outcomes.
+// visual/feel state: screen shake, hit sparks, death bursts, damage
+// numbers, chain lines, plus gold-coin pickup movement and collection
 
 import { sfxPickupGold } from '../audio/sfx.js';
 import { GOLD_CAP } from '../data/constants.js';
+import { waveGoldMult } from '../state/derived.js';
 import { canvasHolder, canvasFrame } from '../dom.js';
 import { logEvent } from '../render/hud.js';
 import { store } from '../state/store.js';
 
 export function triggerShake(mag,dur){ store.game.shakeMag = Math.max(store.game.shakeMag,mag); store.game.shakeTime = Math.max(store.game.shakeTime,dur); }
 
-/** Freezes gameplay updates (not rendering) for a few frames — a genuine
- * hit-stop, reserved for the heaviest impacts (boss slams landing). Keep
- * durations short (well under 0.15s); longer reads as lag, not impact. */
+// freezes gameplay updates (not rendering) for a few frames, a genuine
+// hit-stop, reserved for the heaviest impacts (boss slams landing).
+// keep it short, well under 0.15s, longer reads as lag not impact
 export function triggerHitStop(dur){ store.game.hitStopTimer = Math.max(store.game.hitStopTimer||0, dur); }
 
 let chromaTimeout = null;
-/** Brief red/cyan channel-split flash on the play area — reserved for
- * genuinely big moments (crits, boss slams, boss spawns) so it stays
- * meaningful instead of firing on every hit. */
+// brief red/cyan channel-split flash on the play area, reserved for
+// genuinely big moments (crits, boss slams, boss spawns) so it stays
+// meaningful instead of firing on every hit
 export function triggerChroma(){
   canvasHolder.classList.remove('chroma-pulse');
   void canvasHolder.offsetWidth;
@@ -28,11 +28,11 @@ export function triggerChroma(){
 }
 
 let frameFlashTimeout = null;
-/** Punches the arena's outer frame with a brief colored flash — the
- * "outline lights up" reaction. `color` drives the border and the tight
- * inner glow; `glow` is the softer, wider halo (usually the same hue at
- * lower opacity). Called generously across many different events on
- * purpose — this is the game's main "something just happened" signal. */
+// punches the arena's outer frame with a brief colored flash, the
+// "outline lights up" reaction. color drives the border and tight
+// inner glow, glow is the softer wider halo (usually same hue, lower
+// opacity). called generously on purpose, it's the main "something
+// just happened" signal
 export function triggerFrameFlash(color, glow, dur){
   dur = dur || 0.4;
   canvasFrame.style.setProperty('--flash-color', color);
@@ -76,7 +76,7 @@ export function updateCoins(dt){
     if (d < p.pickupRadius){ const ang=Math.atan2(p.y-c.y,p.x-c.x); c.x+=Math.cos(ang)*340*dt; c.y+=Math.sin(ang)*340*dt; }
     else { c.x += (c.vx||0)*dt*0.3; c.y += (c.vy||0)*dt*0.3; }
     if (d < 12){
-      const gain = Math.round(c.value*p.goldMult);
+      const gain = Math.round(c.value*p.goldMult*waveGoldMult());
       const before = store.game.gold;
       store.game.gold = Math.min(GOLD_CAP, store.game.gold+gain);
       if (store.game.gold===GOLD_CAP && before<GOLD_CAP && !store.game.goldCapNotified){ store.game.goldCapNotified=true; logEvent(`Gold capped at ${GOLD_CAP}. Spend some in the shop to keep earning.`); }

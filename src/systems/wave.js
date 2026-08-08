@@ -1,24 +1,22 @@
-// Wave lifecycle: countdown, clearing a wave, rolling a random temporary
-// event (1-4 waves, reverted automatically when its timer runs out),
-// and the endless-mode continue/victory transitions.
+// wave lifecycle: countdown, clearing, random temporary events (1-4
+// waves, auto-reverted), endless mode continue/victory
 //
-// triggerVictory has a deliberate `if (!store.running) return;` guard
-// inside its setTimeout callback — without it, quitting to the main menu
-// during the ~900ms victory-banner window would still force the victory
-// screen open a moment later, overriding the menu. Found in the
-// architecture review; don't remove it.
+// triggerVictory has a deliberate if (!store.running) return; guard in
+// its setTimeout, without it quitting to menu during the ~900ms
+// victory banner still forces the victory screen open a moment later.
+// don't remove it
 
 import { sfxEvent, sfxVictory, sfxWaveClear } from '../audio/sfx.js';
-import { ARENA_H, ARENA_W, WIN_WAVE } from '../data/constants.js';
+import { ARENA_H, ARENA_W } from '../data/constants.js';
 import { EVENTS } from '../data/events.js';
-import { logEvent, showWaveBanner } from '../render/hud.js';
+import { logEvent, showWaveBanner, renderPostRunSummary } from '../render/hud.js';
 import { showScreen } from '../render/screens.js';
 import { computeScore } from '../state/derived.js';
 import { store } from '../state/store.js';
 import { STORE_STATS, saveJSON } from '../storage.js';
 import { unlockEvent } from './achievements.js';
 import { openShop } from './economy.js';
-import { isBossWaveNow, spawnEnemy } from './enemies.js';
+import { isBossWaveNow, spawnEnemy, enrageBoss } from './enemies.js';
 import { triggerShake, triggerFrameFlash } from './particles.js';
 import { spawnIntervalFor, waveDurationFor } from '../utils.js';
 
@@ -35,7 +33,14 @@ export function updateWaveTimer(dt){
   }
   store.game.waveTime += dt;
   if (!bossWave && store.game.waveTime>=store.game.waveDuration) finishWave();
-  else if (bossWave && store.game.wave!==WIN_WAVE && store.game.waveTime>150) finishWave();
+  // boss waves never time out into the shop, the only way out is
+  // killing the boss. avoiding it makes it enrage, repeatedly, no
+  // limit, so stalling gets worse the longer it drags on instead of
+  // eventually just working
+  else if (bossWave && store.game.bossSpawned && store.game.waveTime>=store.game.bossEnrageAt){
+    enrageBoss();
+    store.game.bossEnrageAt += 30;
+  }
 }
 export function finishWave(){
   store.game.waveActive = false;
@@ -63,7 +68,7 @@ export function maybeTriggerEvent(clearedWave){
   const duration = 1 + Math.floor(Math.random()*4);
   ev.apply(store.game.player);
   unlockEvent(ev.id);
-  store.game.activeEvent = { label:ev.label, desc:ev.desc, positive:ev.positive, wavesLeft:duration, revert:ev.revert };
+  store.game.activeEvent = { id:ev.id, label:ev.label, desc:ev.desc, positive:ev.positive, wavesLeft:duration, apply:ev.apply, revert:ev.revert };
   document.getElementById('eventIcon').textContent = ev.positive ? '\u2726' : '\u26A0';
   document.getElementById('eventIcon').style.color = ev.positive ? 'var(--accent)' : 'var(--danger)';
   const titleEl = document.getElementById('eventTitle');
@@ -88,6 +93,7 @@ export async function triggerVictory(){
     if (!store.running) return;
     document.getElementById('victoryScore').textContent = computeScore();
     document.getElementById('victoryWave').textContent = store.game.wave;
+    renderPostRunSummary('victory');
     showScreen('victory');
   }, 900);
 }

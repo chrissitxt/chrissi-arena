@@ -1,8 +1,6 @@
-// Screen show/hide, UI scale, the dark/bright atmosphere setting, settings
-// button active-states, and the desktop-only size gate. checkDesktop()
-// pauses an in-progress run the moment the gate appears — without that,
-// resizing the window mid-run left the game running invisibly behind the
-// gate overlay, since the overlay never actually paused anything.
+// screen show/hide, ui scale, settings button states, desktop-only
+// gate. checkDesktop() pauses a run the moment the gate shows up,
+// otherwise resizing mid-run kept the game running invisibly behind it
 
 import { gameWrap, screens } from '../dom.js';
 import { renderPauseStats } from './hud.js';

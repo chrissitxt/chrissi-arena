@@ -1,16 +1,14 @@
-// Run lifecycle: starting a fresh run, pausing/resuming, quitting back to
-// the menu, detecting player death (including the Phoenix Heart revive),
-// and ending a run (recording stats + run history).
+// run lifecycle: start, pause/resume, quit to menu, death (including
+// the phoenix heart revive), and ending a run (stats + history)
 
 import { sfxGameOver, sfxPhoenix, sfxBootJingle, setMusicMode, stopMusic, scheduleMusicStart } from '../audio/sfx.js';
-import { logEl_clear, logEvent, renderBuildGrid } from '../render/hud.js';
+import { logEl_clear, logEvent, renderBuildGrid, renderPostRunSummary, randomDeathQuip } from '../render/hud.js';
 import { refreshMenu, showScreen } from '../render/screens.js';
 import { computeScore } from '../state/derived.js';
 import { newGameState } from '../state/gameState.js';
 import { store } from '../state/store.js';
 import { STORE_HISTORY, STORE_STATS, saveJSON } from '../storage.js';
 import { buildSnapshot } from './economy.js';
-import { loop } from './loop.js';
 import { spawnDamageText, triggerShake, triggerFrameFlash } from './particles.js';
 
 export function startRun(){
@@ -25,8 +23,6 @@ export function startRun(){
   renderBuildGrid();
   showScreen('game');
   store.lastFrameTime = performance.now();
-  if (store.animHandle) cancelAnimationFrame(store.animHandle);
-  store.animHandle = requestAnimationFrame(loop);
 }
 export function resumeGame(){ store.paused = false; showScreen('game'); store.lastFrameTime = performance.now(); }
 export function quitToMenu(){ store.running = false; store.paused = false; setMusicMode('main'); refreshMenu(); showScreen('menu'); }
@@ -67,5 +63,7 @@ export async function endRun(){
   document.getElementById('goGold').textContent = store.game.gold;
   document.getElementById('newBestBanner').classList.toggle('hidden', !isNewBest);
   document.getElementById('goVictoryTag').classList.toggle('hidden', !store.game.gameWon);
+  document.getElementById('goDeathQuip').textContent = store.game.gameWon ? '' : randomDeathQuip();
+  renderPostRunSummary('go');
   showScreen('gameover');
 }

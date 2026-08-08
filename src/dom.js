@@ -1,5 +1,5 @@
-// Cached references to DOM elements that many modules need. Grabbed once at
-// import time (these elements exist in index.html before any script runs).
+// cached dom refs, grabbed once at import time (these all exist in
+// index.html before any script runs)
 
 import { ARENA_W, ARENA_H } from './data/constants.js';
 
@@ -20,6 +20,7 @@ export const screens = {
   compendium: document.getElementById('screenCompendium'),
   stats: document.getElementById('screenStats'),
   changelog: document.getElementById('screenChangelog'),
+  roadmap: document.getElementById('screenRoadmap'),
   pause: document.getElementById('screenPause'),
   event: document.getElementById('screenEvent'),
   shop: document.getElementById('screenShop'),

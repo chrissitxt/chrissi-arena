@@ -1,6 +1,5 @@
-// Manual save export/import (a downloadable JSON snapshot of settings,
-// stats, compendium unlocks, and run history) — independent of the
-// automatic localStorage persistence in storage.js.
+// manual save export/import, a downloadable json snapshot, separate
+// from the automatic localStorage stuff in storage.js
 
 import { GAME_VERSION } from '../data/constants.js';
 import { applyUIScale, refreshMenu, updateSettingButtons } from '../render/screens.js';

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { store } from '../src/state/store.js';
 import { newGameState } from '../src/state/gameState.js';
 import { triggerHitStop } from '../src/systems/particles.js';
@@ -94,5 +94,29 @@ describe('triggerFrameFlash', () => {
       triggerFrameFlash('blue', 'blue', 0.2);
       triggerFrameFlash('green', 'green', 0.2);
     }).not.toThrow();
+  });
+});
+
+describe('scheduleNextFrame (background-tab mitigation: falls back to setTimeout while the tab is hidden, since browsers pause requestAnimationFrame entirely for backgrounded tabs)', () => {
+  it('uses requestAnimationFrame while the document is visible', async () => {
+    const { scheduleNextFrame } = await import('../src/systems/loop.js');
+    const rafSpy = vi.spyOn(window, 'requestAnimationFrame');
+    Object.defineProperty(document, 'hidden', { value: false, configurable: true });
+    scheduleNextFrame();
+    expect(rafSpy).toHaveBeenCalled();
+    rafSpy.mockRestore();
+  });
+
+  it('falls back to setTimeout while the document is hidden, instead of requestAnimationFrame', async () => {
+    const { scheduleNextFrame } = await import('../src/systems/loop.js');
+    const rafSpy = vi.spyOn(window, 'requestAnimationFrame');
+    const timeoutSpy = vi.spyOn(window, 'setTimeout');
+    Object.defineProperty(document, 'hidden', { value: true, configurable: true });
+    scheduleNextFrame();
+    expect(rafSpy).not.toHaveBeenCalled();
+    expect(timeoutSpy).toHaveBeenCalled();
+    rafSpy.mockRestore();
+    timeoutSpy.mockRestore();
+    Object.defineProperty(document, 'hidden', { value: false, configurable: true });
   });
 });

@@ -1,8 +1,8 @@
-// Every enemy type, regular and boss. `boss:true` marks the four Titans.
-// Special-ability flags (ranged, phasing, shielding, leech, jammer,
-// invisible, splitsInto/splitCount, bomber) are read by systems/enemies.js —
-// see spawnRegular() there for exactly which flags get copied onto a live
-// enemy instance.
+// every enemy type, regular and boss. boss:true marks the titans. special
+// flags (ranged, phasing, shielding, leech, jammer, invisible, bomber,
+// totem, mimic, splitsInto/splitCount) get read by systems/enemies.js,
+// see spawnRegular() there for exactly which ones get copied onto a
+// live enemy instance
 
 export const ENEMY_TYPES = [
   { id:'shambler', name:'Shambler', hp:10, speed:56, dmg:5, radius:13, color:'#b06a4a', shape:'basic', ranged:false, gold:1, minWave:1, desc:'A slow, shuffling husk. Weak alone, dangerous in numbers.' },
@@ -19,11 +19,21 @@ export const ENEMY_TYPES = [
   { id:'phantom', name:'Phantom', hp:14, speed:85, dmg:8, radius:12, color:'#c8b8ff', shape:'erratic', ranged:false, gold:3, phasing:true, minWave:14, desc:'Slips out of phase on a cycle. Your shots pass through it while it fades.' },
   { id:'shade', name:'Shade', hp:14, speed:70, dmg:9, radius:12, color:'#4a3a5c', shape:'erratic', ranged:false, gold:3, invisible:true, minWave:16, desc:'Unseen until it is nearly on top of you. Stays hidden until it closes the distance.' },
   { id:'warden', name:'Warden', hp:50, speed:30, dmg:11, radius:20, color:'#5a6fae', shape:'armored', ranged:false, gold:3, shielding:true, minWave:17, desc:'Periodically raises a shield that blocks most incoming damage. Time your shots.' },
-  { id:'warlord', name:'The Warlord', hp:380, speed:38, dmg:20, radius:30, color:'#e5534b', shape:'boss', boss:true, gold:15, minWave:5, desc:'A boss. Periodically unleashes a ring of projectiles.' },
-  { id:'broodmother', name:'The Broodmother', hp:320, speed:42, dmg:13, radius:27, color:'#6fae4f', shape:'boss', boss:true, ranged:true, gold:15, minWave:10, desc:'A boss. Keeps its distance, spits from range, and calls swarmlings to her aid.' },
-  { id:'colossus', name:'The Colossus', hp:520, speed:28, dmg:18, radius:34, color:'#8a8a9a', shape:'boss', boss:true, gold:15, minWave:15, desc:'A boss. Slow but devastating. Its slam telegraphs before it lands.' },
-  { id:'finalboss', name:'The Devourer', hp:900, speed:34, dmg:24, radius:38, color:'#7d2fae', shape:'boss', boss:true, gold:35, minWave:30, desc:'The final boss. Rings, slams, and summons, all at once.' }
+  { id:'totem', name:'War Totem', hp:32, speed:0, dmg:4, radius:15, color:'#d4a24a', shape:'armored', ranged:false, gold:3, totem:true, minWave:12, desc:"Doesn't move, doesn't chase. Shields everything standing near it. Kill it first." },
+  { id:'mimic', name:'Mimic', hp:18, speed:95, dmg:14, radius:12, color:'#c9a227', shape:'spiky', ranged:false, gold:3, mimic:true, minWave:9, desc:"Sits perfectly still. Get too close and find out why that was a bad idea." },
+  { id:'warlord', name:'The Warlord', hp:400, speed:38, dmg:20, radius:30, color:'#e5534b', shape:'boss', boss:true, gold:15, minWave:5, desc:'Periodically unleashes a ring of projectiles.' },
+  { id:'broodmother', name:'The Broodmother', hp:480, speed:42, dmg:13, radius:27, color:'#6fae4f', shape:'boss', boss:true, ranged:true, gold:15, minWave:10, desc:'Keeps its distance, spits from range, and calls swarmlings to her aid.' },
+  { id:'colossus', name:'The Colossus', hp:750, speed:28, dmg:18, radius:34, color:'#8a8a9a', shape:'boss', boss:true, gold:15, minWave:15, desc:'Slow but devastating. Its slam telegraphs before it lands.' },
+  { id:'finalboss', name:'The Devourer', hp:1400, speed:34, dmg:24, radius:38, color:'#7d2fae', shape:'boss', boss:true, gold:35, minWave:30, desc:'Final boss. Rings, slams, and summons, all at once.' },
+  { id:'butcher', name:'The Butcher', hp:400, speed:44, dmg:22, radius:29, color:'#b5451f', shape:'boss', boss:true, gold:15, minWave:5, desc:'Winds up a heavy charge. Grows faster and more vicious the lower its health falls.' },
+  { id:'swarmqueen', name:'The Swarm Queen', hp:400, speed:40, dmg:10, radius:26, color:'#3d8b5f', shape:'boss', boss:true, gold:15, minWave:5, desc:'Constantly births more of her brood. Draws strength from every one still alive.' },
+  { id:'sentinel', name:'The Sentinel', hp:440, speed:22, dmg:16, radius:31, color:'#4a6fa5', shape:'boss', boss:true, gold:15, minWave:10, desc:'Barely moves. Sweeps a rotating beam of fire across the arena.' },
+  { id:'mirror', name:'The Mirror', hp:420, speed:36, dmg:18, radius:28, color:'#9d7bf0', shape:'boss', boss:true, gold:15, minWave:10, desc:'Occasionally splits off a duplicate of itself. Not a harmless one.' },
+  { id:'hollowking', name:'The Hollow King', hp:500, speed:30, dmg:20, radius:33, color:'#2a1240', shape:'boss', boss:true, gold:15, minWave:15, desc:'Draws you in with a pull you cannot resist. Worse the more cursed your build.' }
 ];
 
-// Boss rotation for every 5th wave (excluding the final boss at WIN_WAVE).
-export const BOSS_CYCLE = ['warlord','broodmother','colossus'];
+// boss pool for every 5th wave (excluding the final boss at WIN_WAVE).
+// one gets picked at random each time, never the same boss twice in a
+// row, instead of a fixed rotation, so it stays unpredictable run to
+// run
+export const BOSS_POOL = ['warlord','broodmother','colossus','butcher','swarmqueen','sentinel','mirror','hollowking'];

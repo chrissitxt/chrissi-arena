@@ -1,11 +1,9 @@
-// Application entry point: wires every DOM control to its handler and
-// boots the game. This file should stay "thin" — event listener ->
-// function call. Actual game logic lives in systems/*, rendering in
-// render/*.
+// entry point, wires dom controls to handlers and boots the game.
+// keep this thin, actual logic lives in systems/*, rendering in render/*
 
 import './style.css';
 
-import { initAudioOnce, sfxAchievement, sfxUIClick, startMusic, stopMusic } from './audio/sfx.js';
+import { initAudioOnce, sfxAchievement, sfxUIClick, startMusic, stopMusic, sfxDenied } from './audio/sfx.js';
 import { ACHIEVEMENTS } from './data/achievements.js';
 import { ARENA_H, ARENA_W, GAME_VERSION } from './data/constants.js';
 import { ENEMY_TYPES } from './data/enemies.js';
@@ -13,14 +11,14 @@ import { EVENTS } from './data/events.js';
 import { ITEMS } from './data/items.js';
 import { canvas, gameWrap, screens } from './dom.js';
 import { openCompendium, renderChangelog, renderCompendium, renderStats } from './render/compendium.js';
-import { logEvent, renderPauseStats } from './render/hud.js';
+import { logEvent, renderPauseStats, flashGoldDisplay, showStatTooltip } from './render/hud.js';
 import { applyUIScale, checkDesktop, refreshMenu, showScreen, updateSettingButtons } from './render/screens.js';
-import { renderShop } from './render/shop.js';
+import { renderShop, moveItemTooltip, hideItemTooltip } from './render/shop.js';
 import { computeScore } from './state/derived.js';
 import { store } from './state/store.js';
 import { STORE_COMPENDIUM, STORE_HISTORY, STORE_SETTINGS, STORE_STATS, loadJSON, saveJSON } from './storage.js';
-import { buildSnapshot, openShop, rollItem } from './systems/economy.js';
-import { loop } from './systems/loop.js';
+import { buildSnapshot, openShop, rerollUnlockedOffers } from './systems/economy.js';
+import { scheduleNextFrame } from './systems/loop.js';
 import { quitToMenu, resumeGame, startRun } from './systems/run.js';
 import { exportSave, importSaveFile } from './systems/saveFile.js';
 import { continueEndless, recenterPlayer } from './systems/wave.js';
@@ -28,9 +26,7 @@ import { waveDurationFor } from './utils.js';
 
 const CHEAT_CODE = 'unlockall';
 
-// =================================================================
-// Audio (synthesized, no external files)
-// =================================================================
+// audio (synthesized, no external files)
 
 window.addEventListener('pointerdown', initAudioOnce);
 window.addEventListener('keydown', initAudioOnce);
@@ -61,6 +57,8 @@ window.addEventListener('keydown', (e) => {
 document.getElementById('btnStart').addEventListener('click', startRun);
 document.getElementById('btnCompendium').addEventListener('click', () => { openCompendium('menu'); });
 document.getElementById('btnStats').addEventListener('click', () => { renderStats(); showScreen('stats'); });
+document.getElementById('btnRoadmap').addEventListener('click', () => { showScreen('roadmap'); });
+document.getElementById('btnRoadmapBack').addEventListener('click', () => { refreshMenu(); showScreen('menu'); });
 document.getElementById('btnSettings').addEventListener('click', () => { store.settingsReturnTo='menu'; showScreen('settings'); });
 document.getElementById('versionTag').addEventListener('click', () => { renderChangelog(); showScreen('changelog'); });
 document.getElementById('btnChangelogBack').addEventListener('click', () => { refreshMenu(); showScreen('menu'); });
@@ -98,6 +96,11 @@ document.querySelectorAll('.fps-opt').forEach(btn => btn.addEventListener('click
   updateSettingButtons();
   saveJSON(STORE_SETTINGS, store.settings);
 }));
+document.querySelectorAll('.stat-row-sm[data-statkey]').forEach(row => {
+  row.addEventListener('mouseenter', (ev) => showStatTooltip(ev, row.dataset.statkey));
+  row.addEventListener('mousemove', moveItemTooltip);
+  row.addEventListener('mouseleave', hideItemTooltip);
+});
 document.querySelectorAll('.toggle-opt[data-uiscale]').forEach(btn => btn.addEventListener('click', () => {
   store.settings.uiSize = btn.dataset.uiscale;
   applyUIScale(store.settings.uiSize);
@@ -159,13 +162,16 @@ window.addEventListener('beforeunload', (e) => {
 document.getElementById('btnReroll').addEventListener('click', () => {
   if (store.game.freeRerolls > 0){
     store.game.freeRerolls -= 1;
-    if (store.game.freeRerollsFromBase > 0){ store.game.freeRerollsFromBase -= 1; store.game.freeRerollUsedThisRun = true; }
   } else {
-    if (store.game.gold < store.rerollCost) return;
+    if (store.game.gold < store.rerollCost){
+      flashGoldDisplay();
+      sfxDenied();
+      return;
+    }
     store.game.gold -= store.rerollCost;
-    store.rerollCost += 5;
+    store.rerollCost *= 2;
   }
-  store.shopOffers = [rollItem(), rollItem(), rollItem()];
+  rerollUnlockedOffers();
   renderShop();
 });
 document.getElementById('btnContinue').addEventListener('click', () => {
@@ -193,7 +199,7 @@ export async function boot(){
   updateSettingButtons();
   refreshMenu();
   showScreen('menu');
-  store.animHandle = requestAnimationFrame(loop);
+  scheduleNextFrame();
 }
 
 boot();

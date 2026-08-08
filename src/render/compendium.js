@@ -1,5 +1,5 @@
-// Compendium (items/enemies+titans/events/achievements/guide tabs),
-// changelog, and statistics screens.
+// compendium (items/enemies/titans/events/achievements/guide),
+// changelog, and stats screens
 
 import { ACHIEVEMENTS } from '../data/achievements.js';
 import { CHANGELOG } from '../data/changelog.js';
@@ -24,7 +24,7 @@ export function renderCompendium(tab){
       grid.appendChild(header);
       const sub = document.createElement('div');
       sub.className = 'grid-cards';
-      ITEMS.filter(i=>i.rarity===rarity).forEach(it => {
+      ITEMS.filter(i=>i.rarity===rarity).sort((a,b)=>a.name.localeCompare(b.name)).forEach(it => {
         const known = store.compendium.items.includes(it.id);
         const card = document.createElement('div');
         card.className = 'card ' + (known ? ('rarity-'+it.rarity) : 'locked');
@@ -48,7 +48,7 @@ export function renderCompendium(tab){
       grid.appendChild(header);
       const sub = document.createElement('div');
       sub.className = 'grid-cards';
-      ENEMY_TYPES.filter(e => !!e.boss===group.key).forEach(e => {
+      ENEMY_TYPES.filter(e => !!e.boss===group.key).sort((a,b) => (a.minWave-b.minWave) || a.name.localeCompare(b.name)).forEach(e => {
         const known = store.compendium.enemies.includes(e.id);
         const card = document.createElement('div');
         card.className = 'card ' + (known ? (e.boss ? 'rarity-legendary' : 'rarity-common') : 'locked');
@@ -83,7 +83,7 @@ export function renderCompendium(tab){
       grid.appendChild(header);
       const sub = document.createElement('div');
       sub.className = 'grid-cards';
-      EVENTS.filter(ev=>ev.positive===group.key).forEach(ev => {
+      EVENTS.filter(ev=>ev.positive===group.key).sort((a,b)=>a.label.localeCompare(b.label)).forEach(ev => {
         const known = store.compendium.events.includes(ev.id);
         const card = document.createElement('div');
         card.className = 'card ' + (known ? '' : 'locked');
@@ -126,7 +126,8 @@ export function renderChangelog(){
   wrap.innerHTML = '';
   CHANGELOG.forEach(entry => {
     const d = document.createElement('div'); d.className = 'guide-block';
-    d.innerHTML = `<h3>v${entry.version}</h3><ul style="margin:0; padding-left:18px;">${entry.notes.map(n=>'<li>'+n+'</li>').join('')}</ul>`;
+    const dateHtml = entry.date ? `<span class="changelog-date">${entry.date}</span>` : '';
+    d.innerHTML = `<h3>v${entry.version} ${dateHtml}</h3><ul style="margin:0; padding-left:18px;">${entry.notes.map(n=>'<li>'+n+'</li>').join('')}</ul>`;
     wrap.appendChild(d);
   });
 }
