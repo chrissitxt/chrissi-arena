@@ -6,11 +6,11 @@
 
 export const ENEMY_TYPES = [
   { id:'shambler', name:'Shambler', hp:10, speed:56, dmg:5, radius:13, color:'#b06a4a', shape:'basic', ranged:false, gold:1, minWave:1, desc:'A slow, shuffling husk. Weak alone, dangerous in numbers.' },
-  { id:'sprinter', name:'Sprinter', hp:6, speed:145, dmg:4, radius:10, color:'#e0985f', shape:'basic', ranged:false, gold:1, minWave:1, desc:'Fast and erratic. Closes distance before you notice.' },
+  { id:'sprinter', name:'Sprinter', hp:6, speed:145, dmg:4, radius:10, color:'#e0985f', shape:'basic', ranged:false, erratic:true, gold:1, minWave:1, desc:'Fast and erratic. Closes distance before you notice.' },
   { id:'brute', name:'Brute', hp:38, speed:40, dmg:12, radius:19, color:'#a25fd0', shape:'armored', ranged:false, gold:2, minWave:3, desc:'A hulking wall of muscle. Slow, but hits like a truck.' },
   { id:'spitter', name:'Spitter', hp:9, speed:46, dmg:6, radius:12, color:'#5fd0d0', shape:'spiky', ranged:true, gold:2, minWave:4, desc:'Keeps its distance and spits corrosive bolts.' },
   { id:'swarmling', name:'Swarmling', hp:3, speed:100, dmg:2, radius:8, color:'#e5e55f', shape:'basic', ranged:false, gold:1, minWave:5, desc:'Nearly harmless alone. Never seen alone.' },
-  { id:'wraith', name:'Wraith', hp:16, speed:78, dmg:7, radius:13, color:'#6c6cae', shape:'erratic', ranged:false, gold:2, minWave:7, desc:'A restless spirit that lurches in short, unpredictable bursts.' },
+  { id:'wraith', name:'Wraith', hp:16, speed:78, dmg:7, radius:13, color:'#6c6cae', shape:'erratic', ranged:false, erratic:true, gold:2, minWave:7, desc:'A restless spirit that lurches in short, unpredictable bursts.' },
   { id:'bloater', name:'Bloater', hp:26, speed:44, dmg:7, radius:16, color:'#7fbf5f', shape:'spiky', ranged:false, gold:2, splitsInto:'swarmling', splitCount:3, minWave:8, desc:'Bursts into a handful of swarmlings when it dies. Killing it is only the start.' },
   { id:'hulk', name:'Armored Hulk', hp:44, speed:34, dmg:9, radius:18, color:'#8a8a9a', shape:'armored', ranged:false, gold:2, armor:4, minWave:9, desc:'Thick plating shrugs off ranged fire. Best avoided, not fought.' },
   { id:'leech', name:'Leech', hp:12, speed:65, dmg:3, radius:11, color:'#3ddb8f', shape:'spiky', ranged:false, gold:2, leech:true, minWave:11, desc:'Every hit it lands drains a little gold along with your health.' },
@@ -20,7 +20,7 @@ export const ENEMY_TYPES = [
   { id:'shade', name:'Shade', hp:14, speed:70, dmg:9, radius:12, color:'#4a3a5c', shape:'erratic', ranged:false, gold:3, invisible:true, minWave:16, desc:'Unseen until it is nearly on top of you. Stays hidden until it closes the distance.' },
   { id:'warden', name:'Warden', hp:50, speed:30, dmg:11, radius:20, color:'#5a6fae', shape:'armored', ranged:false, gold:3, shielding:true, minWave:17, desc:'Periodically raises a shield that blocks most incoming damage. Time your shots.' },
   { id:'totem', name:'War Totem', hp:32, speed:0, dmg:4, radius:15, color:'#d4a24a', shape:'armored', ranged:false, gold:3, totem:true, minWave:12, desc:"Doesn't move, doesn't chase. Shields everything standing near it. Kill it first." },
-  { id:'mimic', name:'Mimic', hp:18, speed:95, dmg:14, radius:12, color:'#c9a227', shape:'spiky', ranged:false, gold:3, mimic:true, minWave:9, desc:"Sits perfectly still. Get too close and find out why that was a bad idea." },
+  { id:'mimic', name:'Mimic', hp:18, speed:95, dmg:10, radius:12, color:'#c9a227', shape:'spiky', ranged:false, gold:3, mimic:true, minWave:9, desc:"Sits perfectly still. Get too close and find out why that was a bad idea." },
   { id:'warlord', name:'The Warlord', hp:400, speed:38, dmg:20, radius:30, color:'#e5534b', shape:'boss', boss:true, gold:15, minWave:5, desc:'Periodically unleashes a ring of projectiles.' },
   { id:'broodmother', name:'The Broodmother', hp:480, speed:42, dmg:13, radius:27, color:'#6fae4f', shape:'boss', boss:true, ranged:true, gold:15, minWave:10, desc:'Keeps its distance, spits from range, and calls swarmlings to her aid.' },
   { id:'colossus', name:'The Colossus', hp:750, speed:28, dmg:18, radius:34, color:'#8a8a9a', shape:'boss', boss:true, gold:15, minWave:15, desc:'Slow but devastating. Its slam telegraphs before it lands.' },
@@ -28,7 +28,7 @@ export const ENEMY_TYPES = [
   { id:'butcher', name:'The Butcher', hp:400, speed:44, dmg:22, radius:29, color:'#b5451f', shape:'boss', boss:true, gold:15, minWave:5, desc:'Winds up a heavy charge. Grows faster and more vicious the lower its health falls.' },
   { id:'swarmqueen', name:'The Swarm Queen', hp:400, speed:40, dmg:10, radius:26, color:'#3d8b5f', shape:'boss', boss:true, gold:15, minWave:5, desc:'Constantly births more of her brood. Draws strength from every one still alive.' },
   { id:'sentinel', name:'The Sentinel', hp:440, speed:22, dmg:16, radius:31, color:'#4a6fa5', shape:'boss', boss:true, gold:15, minWave:10, desc:'Barely moves. Sweeps a rotating beam of fire across the arena.' },
-  { id:'mirror', name:'The Mirror', hp:420, speed:36, dmg:18, radius:28, color:'#9d7bf0', shape:'boss', boss:true, gold:15, minWave:10, desc:'Occasionally splits off a duplicate of itself. Not a harmless one.' },
+  { id:'mirror', name:'The Mirror', hp:420, speed:36, dmg:18, radius:28, color:'#9d7bf0', shape:'boss', boss:true, gold:15, minWave:10, desc:'Fires in pairs, and occasionally splits off a duplicate of itself. Not a harmless one.' },
   { id:'hollowking', name:'The Hollow King', hp:500, speed:30, dmg:20, radius:33, color:'#2a1240', shape:'boss', boss:true, gold:15, minWave:15, desc:'Draws you in with a pull you cannot resist. Worse the more cursed your build.' }
 ];
 

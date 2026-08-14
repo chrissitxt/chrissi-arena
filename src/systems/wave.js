@@ -6,7 +6,7 @@
 // victory banner still forces the victory screen open a moment later.
 // don't remove it
 
-import { sfxEvent, sfxVictory, sfxWaveClear } from '../audio/sfx.js';
+import { sfxEvent, sfxVictory, sfxWaveClear, setMusicMode } from '../audio/sfx.js';
 import { ARENA_H, ARENA_W } from '../data/constants.js';
 import { EVENTS } from '../data/events.js';
 import { logEvent, showWaveBanner, renderPostRunSummary } from '../render/hud.js';
@@ -86,7 +86,13 @@ export async function triggerVictory(){
   store.game.enemies = []; store.game.enemyProjectiles = []; store.game.coins = [];
   showWaveBanner('VICTORY!');
   logEvent('The Devourer falls. You have won.');
-  sfxVictory(); triggerShake(10,0.5); triggerFrameFlash('rgba(199,125,255,1)', 'rgba(199,125,255,0.75)', 1.1);
+  // the highest magnitude in the game, deliberately — beating the final
+  // boss should shake the screen harder than anything that can happen
+  // TO you, including the boss's own strongest hit (17). used to sit at
+  // just 10, below several routine boss attacks, which undercut the
+  // single biggest moment in the game
+  sfxVictory(); triggerShake(20,0.5); triggerFrameFlash('rgba(199,125,255,1)', 'rgba(199,125,255,0.75)', 1.1);
+  setMusicMode('victory');
   store.stats.victories = (store.stats.victories||0)+1;
   await saveJSON(STORE_STATS, store.stats);
   setTimeout(() => {

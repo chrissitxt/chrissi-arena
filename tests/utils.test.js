@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clamp, fmtPct, waveDurationFor, spawnIntervalFor } from '../src/utils.js';
+import { clamp, fmtPct, waveDurationFor, spawnIntervalFor, migrateAudioSettings } from '../src/utils.js';
 
 describe('clamp', () => {
   it('returns the value when inside the range', () => {
@@ -53,5 +53,39 @@ describe('spawnIntervalFor', () => {
   });
   it('never goes below the floor of 0.22s', () => {
     expect(spawnIntervalFor(1000)).toBe(0.22);
+  });
+});
+
+describe('migrateAudioSettings (regression: v0.4.3 replaced the on/off musicOn/sfxOn toggles with 0-5 volume sliders — without a migration, a save from before that update with either set to false would silently come back at full volume, since the old keys mapped to nothing in the new shape)', () => {
+  it('converts musicOn:false and sfxOn:false to volume 0', () => {
+    const s = migrateAudioSettings({ musicOn:false, sfxOn:false, fps:60 });
+    expect(s.musicVolume).toBe(0);
+    expect(s.sfxVolume).toBe(0);
+    expect(s.musicOn).toBeUndefined();
+    expect(s.sfxOn).toBeUndefined();
+  });
+
+  it('converts musicOn:true and sfxOn:true to volume 5, not some other value', () => {
+    const s = migrateAudioSettings({ musicOn:true, sfxOn:true });
+    expect(s.musicVolume).toBe(5);
+    expect(s.sfxVolume).toBe(5);
+  });
+
+  it('is a no-op on a settings object already in the new format', () => {
+    const s = migrateAudioSettings({ musicVolume:2, sfxVolume:4 });
+    expect(s.musicVolume).toBe(2);
+    expect(s.sfxVolume).toBe(4);
+  });
+
+  it('handles null/undefined settings without throwing', () => {
+    expect(() => migrateAudioSettings(null)).not.toThrow();
+    expect(() => migrateAudioSettings(undefined)).not.toThrow();
+    expect(migrateAudioSettings(null)).toBe(null);
+  });
+
+  it('does not touch other, unrelated settings keys', () => {
+    const s = migrateAudioSettings({ musicOn:false, fps:120, uiSize:'large' });
+    expect(s.fps).toBe(120);
+    expect(s.uiSize).toBe('large');
   });
 });

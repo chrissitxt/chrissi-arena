@@ -3,7 +3,7 @@
 // stat lookups come from state/derived.js so idle and empty-slot
 // bonuses stay current
 
-import { sfxExplosion, sfxPlayerHurt, sfxShoot } from '../audio/sfx.js';
+import { sfxCritHit, sfxExplosion, sfxHit, sfxPlayerHurt, sfxShoot } from '../audio/sfx.js';
 import { ARENA_H, ARENA_W } from '../data/constants.js';
 import { dodgeCap, effectiveDamageMult, effectiveDamage, effectiveFireRateMult, effectiveRange, lifestealCap, emptySlotDamageBonus, commonSynergyDamageBonus } from '../state/derived.js';
 import { store } from '../state/store.js';
@@ -52,6 +52,7 @@ export function updateProjectiles(dt){
         e.hp -= dmg; e.flashTime = 0.08;
         spawnHitParticle(pr.x,pr.y, pr.crit?'#f2c94c':'#ffffff');
         spawnDamageText(e.x, e.y-e.radius-4, String(dmg), pr.crit?'#f2c94c':'#eae6f0', pr.crit);
+        pr.crit ? sfxCritHit() : sfxHit();
         if (store.game.player.lifesteal>0) store.game.player.hp = Math.min(store.game.player.maxHp, store.game.player.hp + dmg*Math.min(lifestealCap(),store.game.player.lifesteal)/100*(store.game.player.hexedTimer>0?0.25:1));
         if (store.game.player.frostChance>0 && !e.boss && Math.random()*100 < store.game.player.frostChance) e.slowTimer = 1.5;
         if (store.game.player.explosiveLevel>0){
@@ -74,6 +75,7 @@ export function doExplosion(x,y,dmg,exclude,radius){
     if (Math.hypot(o.x-x,o.y-y) < radius){
       o.hp -= dmg; o.flashTime = 0.08;
       spawnHitParticle(o.x,o.y,'#ff9d3d');
+      sfxHit();
       if (o.hp<=0) killEnemy(o);
     }
   }
@@ -93,11 +95,13 @@ export function doChain(fromEnemy, prevDmg, jumpsLeft, hitSet){
   hitSet.add(best);
   store.game.chainLines.push({x1:fromEnemy.x,y1:fromEnemy.y,x2:best.x,y2:best.y,life:0.15,maxLife:0.15});
   spawnHitParticle(best.x,best.y,'#9d7bf0');
+  sfxHit();
   if (best.hp<=0) killEnemy(best);
   doChain(best, dmg, jumpsLeft-1, hitSet);
 }
 export function applyDamageToPlayer(dmg){
   const p = store.game.player;
+  if (store.godmode) return false;
   if (p.invulnTime>0) return false;
   if (Math.random()*100 < Math.min(dodgeCap(),p.dodgeChance)){
     spawnDamageText(p.x,p.y-22,'DODGE','#9aa6c9',false);
@@ -109,7 +113,7 @@ export function applyDamageToPlayer(dmg){
   p.invulnTime = 0.4;
   if (store.game.enemies.some(en=>en.boss)) store.game.currentBossDamaged = true;
   spawnDamageText(p.x,p.y-22,'-'+finalDmg,'#e5534b',false);
-  triggerShake(5,0.15);
+  triggerShake(6,0.15);
   triggerFrameFlash('rgba(229,83,75,0.9)', 'rgba(229,83,75,0.55)', 0.35);
   sfxPlayerHurt();
   return true;
@@ -158,6 +162,7 @@ export function updateOrbitWeapons(dt){
         if (p.lifesteal>0) p.hp = Math.min(p.maxHp, p.hp + dmg*Math.min(lifestealCap(),p.lifesteal)/100*(p.hexedTimer>0?0.25:1));
         spawnHitParticle(bx,by, isCrit?'#f2c94c':'#c9c9d8');
         spawnDamageText(e.x, e.y-e.radius-4, String(dmg), isCrit?'#f2c94c':'#c9c9d8', isCrit);
+        isCrit ? sfxCritHit() : sfxHit();
         e.orbitCooldown[key] = cooldown;
         if (e.hp<=0){ killEnemy(e); }
       }
@@ -191,12 +196,13 @@ export function updatePlayerBombs(dt){
         if (Math.hypot(e.x-b.x,e.y-b.y) < 58){
           e.hp -= dmg; e.flashTime = 0.08;
           spawnHitParticle(e.x,e.y,'#ff9d3d');
+          sfxHit();
           if (e.hp<=0) killEnemy(e);
         }
       }
       if (Math.hypot(p.x-b.x,p.y-b.y) < 58){ applyDamageToPlayer(Math.round(dmg*0.5)); }
       spawnDeathBurst(b.x,b.y,'#ff7a3d',14);
-      triggerShake(6,0.2); sfxExplosion();
+      triggerShake(7,0.2); sfxExplosion();
       store.game.playerBombs.splice(i,1);
     }
   }

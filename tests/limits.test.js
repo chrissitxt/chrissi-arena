@@ -279,11 +279,11 @@ describe("Collector's Charm (common-item synergy, now a flat damage bonus, not a
 });
 
 describe("Minimalist's Edge (empty-slot synergy, now a flat damage bonus, not a percentage)", () => {
-  it('grants exactly +1 damage per empty build slot', () => {
+  it('grants +1 damage per empty build slot, capped at 6 counted empty slots', () => {
     const edge = ITEMS.find(i => i.id === 'minimalistedge');
     store.shopOffers = [{ item: edge, discounted: false, discountPct: 0, bought: false }];
     buyItem(0);
-    const emptySlots = effectiveCap() - store.game.ownedItems.length;
+    const emptySlots = Math.min(6, effectiveCap() - store.game.ownedItems.length);
     expect(emptySlotDamageBonus()).toBe(emptySlots);
   });
 
@@ -291,8 +291,17 @@ describe("Minimalist's Edge (empty-slot synergy, now a flat damage bonus, not a 
     const edge = ITEMS.find(i => i.id === 'minimalistedge');
     store.shopOffers = [{ item: edge, discounted: false, discountPct: 0, bought: false }];
     buyItem(0);
-    const emptySlots = effectiveCap() - store.game.ownedItems.length;
+    const emptySlots = Math.min(6, effectiveCap() - store.game.ownedItems.length);
     expect(effectiveDamage()).toBeCloseTo(store.game.player.damage + emptySlots, 5);
+  });
+
+  it('never exceeds 6 counted empty slots, even on a completely fresh run with only this item owned', () => {
+    const edge = ITEMS.find(i => i.id === 'minimalistedge');
+    store.shopOffers = [{ item: edge, discounted: false, discountPct: 0, bought: false }];
+    buyItem(0);
+    // 11 real empty slots remain (12 cap - 1 owned), but the bonus should
+    // still only count 6 of them
+    expect(emptySlotDamageBonus()).toBe(6);
   });
 
   it('does nothing at all without owning the item', () => {

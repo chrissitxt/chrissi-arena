@@ -39,7 +39,10 @@ export function updateHUD(){
   appEl.classList.toggle('critical-hp', critHp);
 
   document.getElementById('hpLabel').textContent = `${Math.max(0,Math.ceil(p.hp))}/${Math.round(p.maxHp)}`;
-  document.getElementById('hpBar').style.width = Math.max(0,(p.hp/p.maxHp*100))+'%';
+  const hpBar = document.getElementById('hpBar');
+  hpBar.style.width = Math.max(0,(p.hp/p.maxHp*100))+'%';
+  hpBar.classList.toggle('bar-hp-critical', p.hp>0 && p.hp/p.maxHp < 0.25);
+  document.getElementById('lowHpVignette').classList.toggle('visible', p.hp>0 && p.hp/p.maxHp < 0.25);
   document.getElementById('waveLabel').textContent = store.game.wave + (isBossWaveNow()?' (BOSS)':'') + (store.game.gameWon?' \u2726':'');
   document.getElementById('scoreLabel').textContent = tickDisplayedScore(computeScore());
   document.getElementById('goldLabel').textContent = `\u25CF ${store.game.gold}/${GOLD_CAP}`;

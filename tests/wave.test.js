@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { store } from '../src/state/store.js';
 import { newGameState } from '../src/state/gameState.js';
 import { updateWaveTimer } from '../src/systems/wave.js';
+import { unlockEvent } from '../src/systems/achievements.js';
 
 beforeEach(() => {
   store.game = newGameState();
@@ -89,5 +90,52 @@ describe('updateHUD wave-urgency feedback (last 5 seconds of a non-boss wave)', 
     store.game.waveTime = 0; // new wave started
     updateHUD();
     expect(store.game.waveUrgentNotified).toBe(false);
+  });
+});
+
+describe('discovering a new event plays sfxDiscovery (regression: was completely silent)', () => {
+  it('plays sfxDiscovery and adds it to the compendium the first time', async () => {
+    const sfx = await import('../src/audio/sfx.js');
+    const spy = vi.spyOn(sfx, 'sfxDiscovery').mockImplementation(() => {});
+    store.compendium = { items: [], enemies: [], events: [], achievements: [] };
+    unlockEvent('adrenalinerush');
+    expect(spy).toHaveBeenCalled();
+    expect(store.compendium.events).toContain('adrenalinerush');
+    spy.mockRestore();
+  });
+
+  it('does not fire again once already discovered', async () => {
+    const sfx = await import('../src/audio/sfx.js');
+    store.compendium = { items: [], enemies: [], events: ['adrenalinerush'], achievements: [] };
+    const spy = vi.spyOn(sfx, 'sfxDiscovery').mockImplementation(() => {});
+    unlockEvent('adrenalinerush');
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+});
+
+describe('victory has the highest screen-shake magnitude in the game (regression: sat at just 10, below several routine boss attacks, undercutting the single biggest moment in the game)', () => {
+  it("victory's shake magnitude exceeds every other trigger call in the codebase", async () => {
+    const fs = await import('fs');
+    const files = [
+      'src/systems/combat.js', 'src/systems/enemies.js', 'src/systems/run.js', 'src/systems/wave.js'
+    ];
+    const magnitudes = [];
+    for (const f of files){
+      const content = fs.readFileSync(f, 'utf-8');
+      for (const m of content.matchAll(/triggerShake\((\d+(?:\.\d+)?),/g)) magnitudes.push(parseFloat(m[1]));
+    }
+    const victoryMag = 20;
+    const others = magnitudes.filter(m => m !== victoryMag);
+    expect(Math.max(...others)).toBeLessThan(victoryMag);
+  });
+
+  it('store.game.shakeMag reaches 20 when victory actually triggers', async () => {
+    const { triggerVictory } = await import('../src/systems/wave.js');
+    store.game.wave = 30;
+    store.running = true;
+    store.game.shakeMag = 0;
+    await triggerVictory();
+    expect(store.game.shakeMag).toBe(20);
   });
 });

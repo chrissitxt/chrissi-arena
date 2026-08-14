@@ -287,13 +287,22 @@ describe('openShop reroll pricing (regression: first reroll used to be free, and
     expect(store.game.freeRerolls).toBe(1);
   });
 
-  it('the base reroll price doubles every boss wave (every 5 waves)', () => {
-    const expected = { 1: 1, 4: 1, 5: 2, 9: 2, 10: 4, 14: 4, 15: 8, 20: 16, 25: 32, 30: 64 };
+  it('the base reroll price doubles every boss wave (every 5 waves), capped at 8 gold so late-game rerolls stay affordable', () => {
+    const expected = { 1: 1, 4: 1, 5: 2, 9: 2, 10: 4, 14: 4, 15: 8, 20: 8, 25: 8, 30: 8 };
     for (const [wave, price] of Object.entries(expected)) {
       store.game.wave = Number(wave);
       openShop();
       expect(store.rerollCost, `wave ${wave} should start rerolls at ${price}`).toBe(price);
     }
+  });
+
+  it('even three rerolls in one wave-30 visit stay within reach of the gold cap (regression: uncapped, this needed 597% of the 75g cap)', () => {
+    store.game.wave = 30;
+    openShop();
+    const r1 = store.rerollCost;
+    const r2 = r1*2;
+    const r3 = r2*2;
+    expect(r1+r2+r3).toBeLessThanOrEqual(75);
   });
 });
 
@@ -428,5 +437,81 @@ describe('locked shop offers persist across shop visits (regression: a lock only
     // sanity: this is just confirming the normal no-lock path still works,
     // not that the items must differ (they could coincidentally repeat)
     expect(firstVisitIds.length).toBe(3);
+  });
+});
+
+describe('discovering a new item plays sfxDiscovery and logs it (regression: adding something new to the compendium was completely silent, unlike achievements which get sound, flash, and a log entry)', () => {
+  it('plays sfxDiscovery and logs the item name the first time it is bought', async () => {
+    const sfx = await import('../src/audio/sfx.js');
+    const spy = vi.spyOn(sfx, 'sfxDiscovery').mockImplementation(() => {});
+    store.game.gold = 999;
+    store.compendium = { items: [], enemies: [], events: [], achievements: [] };
+    const dagger = ITEMS.find(i => i.id === 'dagger');
+    store.shopOffers = [{ item: dagger, discounted: false, discountPct: 0, bought: false }];
+    buyItem(0);
+    expect(spy).toHaveBeenCalled();
+    expect(store.compendium.items).toContain('dagger');
+    spy.mockRestore();
+  });
+
+  it('does not fire again on a second copy of the same item', async () => {
+    const sfx = await import('../src/audio/sfx.js');
+    store.game.gold = 999;
+    store.compendium = { items: ['dagger'], enemies: [], events: [], achievements: [] };
+    const dagger = ITEMS.find(i => i.id === 'dagger');
+    store.shopOffers = [{ item: dagger, discounted: false, discountPct: 0, bought: false }];
+    const spy = vi.spyOn(sfx, 'sfxDiscovery').mockImplementation(() => {});
+    buyItem(0);
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+});
+
+describe('every shop rejection reason plays sfxDenied (regression: only "not enough gold" had sound, legendary duplicate/cap, stack limit, and full build were silent except for a log line easily missed while looking at the shop grid)', () => {
+  it('legendary cap reached plays sfxDenied', async () => {
+    const sfx = await import('../src/audio/sfx.js');
+    const spy = vi.spyOn(sfx, 'sfxDenied').mockImplementation(() => {});
+    const legendaries = ITEMS.filter(i => i.rarity === 'legendary');
+    // own one legendary already, at the default cap of 1
+    store.game.ownedItems = [{ item: legendaries[0], cost: legendaries[0].price, applyCount: 1 }];
+    const secondLegendary = legendaries[1];
+    store.shopOffers = [{ item: secondLegendary, discounted: false, discountPct: 0, bought: false }];
+    buyItem(0);
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('legendary duplicate not allowed plays sfxDenied', async () => {
+    const sfx = await import('../src/audio/sfx.js');
+    const spy = vi.spyOn(sfx, 'sfxDenied').mockImplementation(() => {});
+    const legendary = ITEMS.find(i => i.rarity === 'legendary');
+    store.game.ownedItems = [{ item: legendary, cost: legendary.price, applyCount: 1 }];
+    store.shopOffers = [{ item: legendary, discounted: false, discountPct: 0, bought: false }];
+    buyItem(0);
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('stack limit reached plays sfxDenied', async () => {
+    const sfx = await import('../src/audio/sfx.js');
+    const spy = vi.spyOn(sfx, 'sfxDenied').mockImplementation(() => {});
+    const dagger = ITEMS.find(i => i.id === 'dagger');
+    store.game.ownedItems = [1,2,3,4].map(() => ({ item: dagger, cost: dagger.price, applyCount: 1 }));
+    store.shopOffers = [{ item: dagger, discounted: false, discountPct: 0, bought: false }];
+    buyItem(0);
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('full build plays sfxDenied', async () => {
+    const sfx = await import('../src/audio/sfx.js');
+    const spy = vi.spyOn(sfx, 'sfxDenied').mockImplementation(() => {});
+    const commons = ITEMS.filter(i => i.rarity === 'common');
+    store.game.ownedItems = commons.slice(0, 12).map(item => ({ item, cost: item.price, applyCount: 1 }));
+    const extra = ITEMS.find(i => !store.game.ownedItems.some(o => o.item.id === i.id));
+    store.shopOffers = [{ item: extra, discounted: false, discountPct: 0, bought: false }];
+    buyItem(0);
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
   });
 });

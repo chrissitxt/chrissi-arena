@@ -60,6 +60,10 @@ export function render(){
       ctx.strokeStyle = 'rgba(255,80,80,0.6)'; ctx.lineWidth=3;
       ctx.beginPath(); ctx.arc(e.x,e.y,95,0,Math.PI*2); ctx.stroke();
     }
+    if (e.boss && e.voidCharging){
+      ctx.strokeStyle = 'rgba(157,123,240,0.6)'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.arc(e.x,e.y,300,0,Math.PI*2); ctx.stroke();
+    }
     ctx.globalAlpha = e.phased ? 0.28 : 1;
     drawEnemyShape(ctx, e.x, e.y, e.radius, e.color, e.shape, e.flashTime>0);
     if (e.shielded){

@@ -7,8 +7,9 @@ export const BOSS_EVERY = 5;
 export const INV_CAP_BASE = 12;
 export const GOLD_CAP = 75;
 export const ITEM_STACK_LIMIT = 4;
-export const IDLE_THRESHOLD = 1.5;
-export const GAME_VERSION = '0.4.0-beta';
+export const REROLL_BASE_CAP = 8;
+export const IDLE_THRESHOLD = 1;
+export const GAME_VERSION = '0.4.3-beta';
 
 // minimum price a shop offer can ever be clamped to, per rarity, a
 // safety floor so a stacked discount can't make something free. keep

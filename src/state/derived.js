@@ -32,7 +32,11 @@ export function effectiveRange() {
 export function emptySlotDamageBonus() {
   const p = store.game.player;
   if (!p.emptySlotDmgFlat) return 0;
-  const empty = Math.max(0, effectiveCap() - store.game.ownedItems.length);
+  // capped at 6 counted empty slots — uncapped, an almost-empty build could
+  // reach +137.5% DPS from this one item alone (11 empty slots at base
+  // damage 8), a ceiling far above anything else in the game. Capping
+  // keeps the "less is more" identity strong without that extreme.
+  const empty = Math.min(6, Math.max(0, effectiveCap() - store.game.ownedItems.length));
   return empty * p.emptySlotDmgFlat;
 }
 

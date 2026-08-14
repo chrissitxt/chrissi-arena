@@ -33,7 +33,7 @@
       <button class="menu-btn" id="btnRoadmap">Roadmap <span class="arrow">&#9654;</span></button>
       <button class="menu-btn" id="btnSettings">Settings <span class="arrow">&#9654;</span></button>
     </div>
-    <div id="versionTag">v0.4.0-beta &middot; changelog</div>
+    <div id="versionTag">v0.4.3-beta &middot; changelog</div>
     <div id="cheatToast" class="hidden" style="position:absolute; bottom:44px; left:50%; transform:translateX(-50%); color:var(--accent); font-size:11px; background:rgba(10,8,16,0.8); border:1px solid var(--wall-lit); padding:6px 14px; letter-spacing:0.5px;">Compendium fully unlocked!</div>
   </div>
 
@@ -42,6 +42,7 @@
     <div class="panel-box" style="width:min(560px,92vw);">
       <div class="panel-header"><h2>SETTINGS</h2><button class="backbtn" data-back>&larr; Back</button></div>
 
+      <div class="setting-section-title">DISPLAY</div>
       <div class="setting-row">
         <span>VSync</span>
         <div class="toggle-opts">
@@ -71,18 +72,20 @@
           <button class="toggle-opt" data-uiscale="large">Large</button>
         </div>
       </div>
+
+      <div class="setting-section-title">AUDIO</div>
       <div class="setting-row">
-        <span>Music</span>
-        <div class="toggle-opts">
-          <button class="toggle-opt" data-toggle="musicOn" data-val="true">On</button>
-          <button class="toggle-opt" data-toggle="musicOn" data-val="false">Off</button>
+        <span>Music volume</span>
+        <div class="volume-slider-wrap">
+          <input type="range" id="musicVolumeSlider" min="0" max="5" step="1" value="5">
+          <span class="volume-slider-label" id="musicVolumeLabel">5</span>
         </div>
       </div>
       <div class="setting-row">
-        <span>Sound effects</span>
-        <div class="toggle-opts">
-          <button class="toggle-opt" data-toggle="sfxOn" data-val="true">On</button>
-          <button class="toggle-opt" data-toggle="sfxOn" data-val="false">Off</button>
+        <span>Sound volume</span>
+        <div class="volume-slider-wrap">
+          <input type="range" id="sfxVolumeSlider" min="0" max="5" step="1" value="5">
+          <span class="volume-slider-label" id="sfxVolumeLabel">5</span>
         </div>
       </div>
       <p class="setting-note">VSync uses your monitor's native refresh timing directly and disables the manual framerate cap above. Music and sound effects are synthesized live with the Web Audio API (oscillators and noise bursts shaped into notes), so nothing needs to load. If the game runs choppy, check that hardware/GPU acceleration is enabled in your browser's settings.</p>
@@ -151,7 +154,7 @@
         <div class="tip-card-sparkle tip-sparkle-3">&#10022;</div>
         <div class="tip-card-text">
           <div class="tip-card-title">Support me</div>
-          <p class="tip-card-desc">I build chrissi's Arena in my free time, around everything else going on in life. If you enjoy playing it, a tip helps me keep putting time into it and keep doing the thing I actually enjoy doing.</p>
+          <p class="tip-card-desc">I build chrissi's Arena in my free time. If you enjoy playing it, or you're curious where this thing could go, a tip helps me survive this cruel world and keep doing stuff I enjoy!</p>
         </div>
         <a id="tipLink" class="tip-card-btn" href="https://paypal.me/jetztpayendlich" target="_blank" rel="noopener noreferrer"><span>Tip</span></a>
       </div>
@@ -162,42 +165,42 @@
           <div class="roadmap-dot roadmap-dot-done">&#10003;</div>
           <div class="roadmap-stage-body">
             <div class="roadmap-stage-title">Phase 1: Prototype</div>
-            <div class="roadmap-stage-desc">A single HTML file, built to prove the core idea worked: auto-fire, movement-only controls, a shop between waves. It did. That first version still lives in the repo, for anyone curious where this started.</div>
+            <div class="roadmap-stage-desc">A single HTML file, built to prove the core idea worked: auto-fire, movement-only controls, a shop between waves. It did. One of a dozen vibecoded prototypes, but the one that stuck. Three and a half months in, before I rebuilt it properly. Still lives in the repo, outdated decisions, lots of AI generated code and all.</div>
           </div>
         </div>
         <div class="roadmap-stage roadmap-stage-current">
           <div class="roadmap-dot roadmap-dot-current">&#9679;</div>
           <div class="roadmap-stage-body">
             <div class="roadmap-stage-title">Phase 2: Foundation (current)</div>
-            <div class="roadmap-stage-desc">That single file got rebuilt from scratch into a proper, organized codebase, tested and open source on GitHub. A steady stream of bug fixes and balance passes based on real playtesting, plus the tools (compendium, guide, stat transparency) needed to keep improving everything that comes after this.</div>
+            <div class="roadmap-stage-desc">It started with tearing the whole thing down to the foundation and rebuilding properly: a single file becoming a real, organized codebase. Now it's everything that comes after laying that foundation: visuals, atmosphere, sound, scaling, figuring out which mechanics actually belong here. The early decisions that decide what kind of house this ends up being, before the content-heavy work of Phase 3 starts filling the rooms.</div>
           </div>
         </div>
         <div class="roadmap-stage">
           <div class="roadmap-dot"></div>
           <div class="roadmap-stage-body">
             <div class="roadmap-stage-title">Phase 3: Content Expansion</div>
-            <div class="roadmap-stage-desc">More items, enemies, and bosses. Deeper variety in how a run can play out.</div>
+            <div class="roadmap-stage-desc">More items, enemies, and bosses. Deeper variety in how a run can play out. Nothing planned in detail yet, Phase 2 comes first.</div>
           </div>
         </div>
         <div class="roadmap-stage">
           <div class="roadmap-dot"></div>
           <div class="roadmap-stage-body">
             <div class="roadmap-stage-title">Phase 4: Systems and Depth</div>
-            <div class="roadmap-stage-desc">Ideas on the table: meta-progression between runs, additional modes, more build variety. Nothing locked in yet.</div>
+            <div class="roadmap-stage-desc">Meta-progression, additional modes, more build variety, maybe. All still just ideas floating around, not real plans. That comes after the foundation.</div>
           </div>
         </div>
         <div class="roadmap-stage roadmap-stage-goal">
           <div class="roadmap-dot roadmap-dot-goal">&#9733;</div>
           <div class="roadmap-stage-body">
             <div class="roadmap-stage-title">Phase 5: Release Prep (the goal)</div>
-            <div class="roadmap-stage-desc">Final polish, everything a real release needs beyond just the game itself. This is the actual target I am working toward.</div>
+            <div class="roadmap-stage-desc">Final polish. Main focus is controller support, mobile support, and autosaves so a crashed tab doesn't cost you a run in progress, alongside a number of other QoL and accessibility improvements I already have concrete plans for. This is the actual target I am working toward.</div>
           </div>
         </div>
         <div class="roadmap-stage roadmap-stage-stretch">
           <div class="roadmap-dot roadmap-dot-stretch">&#10024;</div>
           <div class="roadmap-stage-body">
             <div class="roadmap-stage-title">Stretch Goal: Steam Release</div>
-            <div class="roadmap-stage-desc">Targeting Q4 2027, no later than early 2028, but this is not a promise. As a solo hobby project, this is where I would love to end up, not a date I am committing to.</div>
+            <div class="roadmap-stage-desc">Getting here means a third full restructure, this time off vanilla JS and onto a real engine. I have ideas, and some early tests already went better than expected, but committing to that is still a long way off, and depends heavily on the feedback this game gets along the way. Q1 2028 at the earliest. Not a promise, just a hope.</div>
           </div>
         </div>
       </div>
@@ -250,6 +253,7 @@
           <div id="pauseHint">ESC to pause</div>
           <div id="waveBanner"></div>
           <div id="bossBanner"></div>
+          <div id="lowHpVignette"></div>
         </div>
       </div>
     </div>

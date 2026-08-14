@@ -5,6 +5,7 @@ import { GAME_VERSION } from '../data/constants.js';
 import { applyUIScale, refreshMenu, updateSettingButtons } from '../render/screens.js';
 import { store } from '../state/store.js';
 import { STORE_COMPENDIUM, STORE_HISTORY, STORE_SETTINGS, STORE_STATS, saveJSON } from '../storage.js';
+import { migrateAudioSettings } from '../utils.js';
 
 export function exportSave(){
   const data = { version:GAME_VERSION, settings: store.settings, stats: store.stats, compendium: store.compendium, runHistory: store.runHistory };
@@ -21,7 +22,7 @@ export function importSaveFile(file){
     try {
       const data = JSON.parse(reader.result);
       if (data.settings){
-        store.settings = Object.assign({fps:60,musicOn:true,sfxOn:true,uiSize:'medium',showFps:false,vsyncOn:true}, data.settings);
+        store.settings = Object.assign({fps:60,musicVolume:5,sfxVolume:5,uiSize:'medium',showFps:false,vsyncOn:true}, migrateAudioSettings(data.settings));
       }
       if (data.stats) store.stats = Object.assign({runs:0,bestWave:0,bestScore:0,totalKills:0,totalGold:0,totalTime:0,victories:0,itemPurchaseCounts:{}}, data.stats);
       if (data.compendium) store.compendium = Object.assign({items:[],enemies:[],events:[],achievements:[]}, data.compendium);

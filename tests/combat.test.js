@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   effectiveCap, legendaryCap, dodgeCap, legendaryOwnedCount, computeScore, waveGoldMult
 } from '../src/state/derived.js';
-import { applyDamageToPlayer } from '../src/systems/combat.js';
+import { applyDamageToPlayer, doExplosion, doChain } from '../src/systems/combat.js';
 import { store } from '../src/state/store.js';
 import { newGameState } from '../src/state/gameState.js';
 import { INV_CAP_BASE } from '../src/data/constants.js';
@@ -10,6 +10,7 @@ import { ITEMS } from '../src/data/items.js';
 
 beforeEach(() => {
   store.game = newGameState();
+  store.godmode = false;
 });
 
 describe('derived caps', () => {
@@ -255,5 +256,49 @@ describe("Impaler's Lance (pierce as a one-time legendary unlock, not a stacking
     thousandCuts.apply(p);
     expect(p.pierce).toBe(0);
     expect(p.projectileCount).toBe(4);
+  });
+});
+
+describe('godmode (dev-only testing toggle, not exposed to normal players)', () => {
+  it('blocks all damage from any source, no matter how large, while active', () => {
+    store.game.player.hp = 100;
+    store.godmode = true;
+    const dealt = applyDamageToPlayer(9999);
+    expect(dealt).toBe(false);
+    expect(store.game.player.hp).toBe(100);
+  });
+
+  it('does not affect damage at all while inactive, the default state', () => {
+    store.game.player.hp = 100;
+    store.godmode = false;
+    const dealt = applyDamageToPlayer(30);
+    expect(dealt).toBe(true);
+    expect(store.game.player.hp).toBe(70);
+  });
+});
+
+describe('hit sounds (regression: landing a hit was completely silent, both normal and crit, across every weapon type: gunfire, orbit blades, chain lightning, and explosive tips)', () => {
+  it('doExplosion plays sfxHit once per enemy actually hit in its radius', async () => {
+    const sfx = await import('../src/audio/sfx.js');
+    const spy = vi.spyOn(sfx, 'sfxHit').mockImplementation(() => {});
+    store.game.enemies = [
+      { x: 10, y: 10, hp: 50, radius: 10, phased: false, revealed: true },
+      { x: 15, y: 10, hp: 50, radius: 10, phased: false, revealed: true },
+    ];
+    doExplosion(10, 10, 5, null, 58);
+    expect(spy).toHaveBeenCalledTimes(2);
+    spy.mockRestore();
+  });
+
+  it('doChain plays sfxHit on the enemy it jumps to', async () => {
+    const sfx = await import('../src/audio/sfx.js');
+    const spy = vi.spyOn(sfx, 'sfxHit').mockImplementation(() => {});
+    const source = { x: 0, y: 0, hp: 50, radius: 10, phased: false, revealed: true };
+    const target = { x: 20, y: 0, hp: 50, radius: 10, phased: false, revealed: true };
+    store.game.enemies = [source, target];
+    store.game.chainLines = [];
+    doChain(source, 10, 1, new Set([source]));
+    expect(spy).toHaveBeenCalledTimes(1);
+    spy.mockRestore();
   });
 });

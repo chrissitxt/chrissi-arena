@@ -17,7 +17,12 @@ export function startRun(){
   setMusicMode('main');
   stopMusic();
   sfxBootJingle();
-  scheduleMusicStart(3000);
+  // short enough to let the boot jingle (finishes around 0.5s) actually
+  // be heard clearly on its own, but not the dead 3-second silence this
+  // used to be — menu music is already playing by the time most players
+  // reach this screen anyway, so a long gap just felt like the game
+  // going quiet for no reason
+  scheduleMusicStart(700);
   logEl_clear();
   logEvent('The arena opens. Wave 1 begins.');
   renderBuildGrid();
@@ -25,7 +30,7 @@ export function startRun(){
   store.lastFrameTime = performance.now();
 }
 export function resumeGame(){ store.paused = false; showScreen('game'); store.lastFrameTime = performance.now(); }
-export function quitToMenu(){ store.running = false; store.paused = false; setMusicMode('main'); refreshMenu(); showScreen('menu'); }
+export function quitToMenu(){ store.running = false; store.paused = false; setMusicMode('menu'); refreshMenu(); showScreen('menu'); }
 export function checkPlayerDeath(){
   const p = store.game.player;
   if (p.hp<=0){
@@ -33,10 +38,14 @@ export function checkPlayerDeath(){
       p.phoenixUsed = true;
       p.hp = Math.max(1, Math.round(p.maxHp*0.3));
       p.invulnTime = 1.5;
-      spawnDamageText(p.x,p.y-32,'PHOENIX!','#ff9d3d',true);
+      // was epic orange (#ff9d3d), presumably chosen for the fire/phoenix
+      // theming, but the item is legendary — the game's whole visual
+      // language ties color to rarity, and the single most dramatic
+      // payoff moment of a legendary item was flashing the wrong rarity
+      spawnDamageText(p.x,p.y-32,'PHOENIX!','#c77dff',true);
       logEvent('The Phoenix Heart flares. You rise again.');
-      triggerShake(12,0.4);
-      triggerFrameFlash('rgba(255,157,61,1)', 'rgba(255,157,61,0.7)', 0.8);
+      triggerShake(14,0.4);
+      triggerFrameFlash('rgba(199,125,255,1)', 'rgba(199,125,255,0.7)', 0.8);
       sfxPhoenix();
     } else {
       endRun();

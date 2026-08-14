@@ -2,8 +2,8 @@
 // price floor), buying, selling. buyItem is also where echo core and
 // the legendary rules live, both are shop-purchase-time checks
 
-import { sfxPickupItem, sfxSell, sfxDenied, sfxLegendaryAppears } from '../audio/sfx.js';
-import { GOLD_CAP, RARITY_MIN_PRICE, ITEM_STACK_LIMIT } from '../data/constants.js';
+import { sfxPickupItem, sfxSell, sfxDenied, sfxLegendaryAppears, sfxDiscovery } from '../audio/sfx.js';
+import { GOLD_CAP, RARITY_MIN_PRICE, ITEM_STACK_LIMIT, REROLL_BASE_CAP } from '../data/constants.js';
 import { ITEMS, RARITY_WEIGHT } from '../data/items.js';
 import { flashGoldDisplay, logEvent, renderBuildGrid } from '../render/hud.js';
 import { showScreen } from '../render/screens.js';
@@ -143,7 +143,12 @@ export function openShop(){
   store.game.freeRerolls = store.game.player.freeRerollBonus||0;
   // base reroll price doubles every boss wave, gold income holds up
   // way better late-run now so this needs to keep pace
-  store.rerollCost = Math.pow(2, Math.floor(store.game.wave/5));
+  // base reroll price doubles every boss wave, but caps at REROLL_BASE_CAP
+  // so a late-game visit doesn't require nearly the entire gold cap just
+  // to afford a single reroll (uncapped, this hit 85% of the 75g cap by
+  // wave 30 for the FIRST reroll alone, before even doubling further
+  // within the visit)
+  store.rerollCost = Math.min(REROLL_BASE_CAP, Math.pow(2, Math.floor(store.game.wave/5)));
   renderShop();
   renderShopBuild();
   showScreen('shop');
@@ -198,11 +203,13 @@ export function buyItem(idx){
       );
       if (dupeBonus<=0 || ownedCopies>1 || anyLegendaryAlreadyDoubled){
         logEvent(`You already carry a ${offer.item.name}. You can't hold two of the same legendary.`);
+        sfxDenied();
         return;
       }
     }
     if (legendaryOwnedCount() >= legendaryCap()){
       logEvent(`You can't hold more than ${legendaryCap()} legendary item${legendaryCap()>1?'s':''} right now.`);
+      sfxDenied();
       return;
     }
   } else {
@@ -211,10 +218,11 @@ export function buyItem(idx){
     const ownedCopies = store.game.ownedItems.filter(i=>i.item.id===offer.item.id).length;
     if (ownedCopies >= ITEM_STACK_LIMIT){
       logEvent(`You already carry ${ITEM_STACK_LIMIT} copies of ${offer.item.name}. That's the most you can stack.`);
+      sfxDenied();
       return;
     }
   }
-  if (store.game.ownedItems.length >= effectiveCap()){ logEvent(`Build is full (${effectiveCap()}/${effectiveCap()}). Sell an item below to make room.`); return; }
+  if (store.game.ownedItems.length >= effectiveCap()){ logEvent(`Build is full (${effectiveCap()}/${effectiveCap()}). Sell an item below to make room.`); sfxDenied(); return; }
   store.game.gold -= cost;
   store.game.goldCapNotified = false;
   // echo core doubles exactly the next eligible purchase (never cursed,
@@ -237,7 +245,12 @@ export function buyItem(idx){
   renderBuildGrid(); renderShopBuild();
   logEvent(`Bought ${offer.item.name}.`);
   sfxPickupItem(); flashGoldDisplay();
-  if (!store.compendium.items.includes(offer.item.id)){ store.compendium.items.push(offer.item.id); saveJSON(STORE_COMPENDIUM, store.compendium); }
+  if (!store.compendium.items.includes(offer.item.id)){
+    store.compendium.items.push(offer.item.id);
+    saveJSON(STORE_COMPENDIUM, store.compendium);
+    logEvent(`New item discovered: ${offer.item.name}`);
+    sfxDiscovery();
+  }
   renderShop();
 }
 export function groupOwnedItems(){

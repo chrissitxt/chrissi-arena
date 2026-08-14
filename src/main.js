@@ -3,9 +3,9 @@
 
 import './style.css';
 
-import { initAudioOnce, sfxAchievement, sfxUIClick, startMusic, stopMusic, sfxDenied } from './audio/sfx.js';
+import { initAudioOnce, sfxAchievement, sfxUIClick, startMusic, stopMusic, sfxDenied, setMusicMode } from './audio/sfx.js';
 import { ACHIEVEMENTS } from './data/achievements.js';
-import { ARENA_H, ARENA_W, GAME_VERSION } from './data/constants.js';
+import { ARENA_H, ARENA_W, GAME_VERSION, WIN_WAVE } from './data/constants.js';
 import { ENEMY_TYPES } from './data/enemies.js';
 import { EVENTS } from './data/events.js';
 import { ITEMS } from './data/items.js';
@@ -21,10 +21,11 @@ import { buildSnapshot, openShop, rerollUnlockedOffers } from './systems/economy
 import { scheduleNextFrame } from './systems/loop.js';
 import { quitToMenu, resumeGame, startRun } from './systems/run.js';
 import { exportSave, importSaveFile } from './systems/saveFile.js';
-import { continueEndless, recenterPlayer } from './systems/wave.js';
-import { waveDurationFor } from './utils.js';
+import { continueEndless, recenterPlayer, triggerVictory } from './systems/wave.js';
+import { migrateAudioSettings, waveDurationFor } from './utils.js';
 
 const CHEAT_CODE = 'unlockall';
+const GODMODE_CHEAT_CODE = 'godmode';
 
 // audio (synthesized, no external files)
 
@@ -48,6 +49,21 @@ window.addEventListener('keydown', (e) => {
     window._cheatToastTimer = setTimeout(() => toast.classList.add('hidden'), 2600);
     sfxAchievement();
     store.cheatBuffer = '';
+  }
+});
+// unlike CHEAT_CODE above (menu-only, for unlockall), this one listens
+// during an active run too — the whole point is testing deep into a run,
+// endless mode, the win screen, without needing to actually survive that
+// long for real
+window.addEventListener('keydown', (e) => {
+  if (!store.running || !store.game || store.game.over) return;
+  if (e.key.length !== 1) return;
+  store.godmodeCheatBuffer = (store.godmodeCheatBuffer + e.key.toLowerCase()).slice(-GODMODE_CHEAT_CODE.length);
+  if (store.godmodeCheatBuffer === GODMODE_CHEAT_CODE){
+    store.godmode = !store.godmode;
+    logEvent(store.godmode ? 'Godmode enabled.' : 'Godmode disabled.');
+    sfxAchievement();
+    store.godmodeCheatBuffer = '';
   }
 });
 
@@ -81,8 +97,8 @@ document.getElementById('btnPauseQuit').addEventListener('click', async () => {
   quitToMenu();
 });
 document.getElementById('btnRetry').addEventListener('click', startRun);
-document.getElementById('btnGoMenu').addEventListener('click', () => { refreshMenu(); showScreen('menu'); });
-document.getElementById('btnVictoryMenu').addEventListener('click', () => { store.running=false; refreshMenu(); showScreen('menu'); });
+document.getElementById('btnGoMenu').addEventListener('click', () => { setMusicMode('menu'); refreshMenu(); showScreen('menu'); });
+document.getElementById('btnVictoryMenu').addEventListener('click', () => { store.running=false; setMusicMode('menu'); refreshMenu(); showScreen('menu'); });
 document.getElementById('btnContinueEndless').addEventListener('click', continueEndless);
 document.getElementById('btnEventContinue').addEventListener('click', openShop);
 
@@ -111,11 +127,28 @@ document.querySelectorAll('.toggle-opt[data-toggle]').forEach(btn => btn.addEven
   const key = btn.dataset.toggle;
   const val = btn.dataset.val === 'true';
   store.settings[key] = val;
-  if (key === 'musicOn'){ val ? startMusic() : stopMusic(); }
   if (key === 'showFps'){ document.getElementById('fpsCounter').classList.toggle('hidden', !val); }
   updateSettingButtons();
   saveJSON(STORE_SETTINGS, store.settings);
 }));
+// volume sliders replaced the old music/sfx on-off toggles: 0-5, 5 is
+// full (and the default), 0 is silent — crossing that boundary in
+// either direction still starts/stops the scheduler exactly like the
+// old toggle did, so there's no wasted CPU scheduling silent notes
+document.getElementById('musicVolumeSlider').addEventListener('input', (e) => {
+  const val = Number(e.target.value);
+  const wasOff = store.settings.musicVolume<=0;
+  store.settings.musicVolume = val;
+  document.getElementById('musicVolumeLabel').textContent = String(val);
+  if (val<=0) stopMusic(); else if (wasOff) startMusic();
+  saveJSON(STORE_SETTINGS, store.settings);
+});
+document.getElementById('sfxVolumeSlider').addEventListener('input', (e) => {
+  const val = Number(e.target.value);
+  store.settings.sfxVolume = val;
+  document.getElementById('sfxVolumeLabel').textContent = String(val);
+  saveJSON(STORE_SETTINGS, store.settings);
+});
 
 document.getElementById('btnExportSave').addEventListener('click', exportSave);
 document.getElementById('btnImportSave').addEventListener('click', () => document.getElementById('importFileInput').click());
@@ -190,7 +223,7 @@ window.addEventListener('resize', checkDesktop);
 export async function boot(){
   checkDesktop();
   document.getElementById('versionTag').innerHTML = 'v'+GAME_VERSION+' &middot; changelog';
-  store.settings = Object.assign({fps:60,musicOn:true,sfxOn:true,uiSize:'medium',showFps:false,vsyncOn:true}, await loadJSON(STORE_SETTINGS, {}));
+  store.settings = migrateAudioSettings(Object.assign({fps:60,musicVolume:5,sfxVolume:5,uiSize:'medium',showFps:false,vsyncOn:true}, await loadJSON(STORE_SETTINGS, {})));
   store.stats = Object.assign({runs:0,bestWave:0,bestScore:0,totalKills:0,totalGold:0,totalTime:0,victories:0,itemPurchaseCounts:{}}, await loadJSON(STORE_STATS, {}));
   store.compendium = Object.assign({items:[],enemies:[],events:[],achievements:[]}, await loadJSON(STORE_COMPENDIUM, {}));
   store.runHistory = await loadJSON(STORE_HISTORY, []);

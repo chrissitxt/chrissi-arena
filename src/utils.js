@@ -39,3 +39,21 @@ export function waveDurationFor(wave) {
 export function spawnIntervalFor(wave) {
   return Math.max(0.22, 1.2 - wave * 0.03);
 }
+
+// v0.4.3 replaced the old musicOn/sfxOn on-off toggles with 0-5 volume
+// sliders. Without this, a save from before that change with either set
+// to false would silently come back at full volume after loading, since
+// the old keys don't map to anything in the new settings shape — a real
+// regression for anyone who had deliberately muted the game. Mutates
+// and returns the same settings object; safe to call on a save that's
+// already on the new format, it's a no-op then.
+export function migrateAudioSettings(settings) {
+  if (settings && typeof settings.musicOn === 'boolean' && settings.musicVolume === undefined) {
+    settings.musicVolume = settings.musicOn ? 5 : 0;
+  }
+  if (settings && typeof settings.sfxOn === 'boolean' && settings.sfxVolume === undefined) {
+    settings.sfxVolume = settings.sfxOn ? 5 : 0;
+  }
+  if (settings) { delete settings.musicOn; delete settings.sfxOn; }
+  return settings;
+}

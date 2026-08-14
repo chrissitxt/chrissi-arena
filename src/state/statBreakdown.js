@@ -82,7 +82,7 @@ export function computeStatBreakdown(ownedItems){
   // already exactly what to show
   if (current.emptySlotDmgFlat){
     const cap = INV_CAP_BASE + (current.invCapBonus||0);
-    const empty = Math.max(0, cap - ownedItems.length);
+    const empty = Math.min(6, Math.max(0, cap - ownedItems.length)); // capped, see derived.js:emptySlotDamageBonus
     const bonus = empty * current.emptySlotDmgFlat;
     if (bonus > 0){
       entries.damage.rows.push({ name: "Minimalist's Edge", delta: bonus, from: entries.damage.final, to: entries.damage.final+bonus });

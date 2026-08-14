@@ -4,6 +4,7 @@
 import { gameWrap } from '../dom.js';
 import { render } from '../render/canvas.js';
 import { store } from '../state/store.js';
+import { sfxHeartbeat } from '../audio/sfx.js';
 import { updateOrbitWeapons, updatePlayerBombs, updatePlayerMovement, updateProjectiles, updateShooting, updateCurseZones } from './combat.js';
 import { updateEnemies, updateEnemyProjectiles } from './enemies.js';
 import { updateChainLines, updateCoins, updateDamageTexts, updateParticles } from './particles.js';
@@ -73,6 +74,17 @@ export function update(dt){
   if (p.jamTimer>0) p.jamTimer -= dt;
   if (p.hexedTimer>0) p.hexedTimer -= dt;
   if (p.regen>0 && p.hp<p.maxHp) p.hp = Math.min(p.maxHp, p.hp + p.regen*dt);
+  // heartbeat warning below 25% hp, interval shrinks the lower hp gets
+  // (0.8s right at the threshold, down to 0.3s near death), so it reads
+  // as escalating urgency rather than a flat, static alarm
+  const hpPct = p.hp/p.maxHp;
+  if (hpPct < 0.25 && hpPct > 0){
+    const beatInterval = 0.3 + (hpPct/0.25)*0.5;
+    store.game.hpBeatTimer = (store.game.hpBeatTimer||0) - dt;
+    if (store.game.hpBeatTimer <= 0){ store.game.hpBeatTimer = beatInterval; sfxHeartbeat(); }
+  } else {
+    store.game.hpBeatTimer = 0;
+  }
 
   updatePlayerMovement(dt);
   updateShooting(dt);

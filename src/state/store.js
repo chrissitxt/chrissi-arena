@@ -18,7 +18,7 @@
 
 export const store = {
   // persisted (see storage.js): user settings, lifetime stats, unlocks
-  settings: { fps: 60, musicOn: true, sfxOn: true, uiSize: 'medium', showFps: false, vsyncOn: true },
+  settings: { fps: 60, musicVolume: 5, sfxVolume: 5, uiSize: 'medium', showFps: false, vsyncOn: true },
   stats: { runs: 0, bestWave: 0, bestScore: 0, totalKills: 0, totalGold: 0, totalTime: 0, victories: 0, itemPurchaseCounts: {} },
   compendium: { items: [], enemies: [], events: [], achievements: [] },
   runHistory: [],
@@ -48,5 +48,11 @@ export const store = {
   uiScale: 1,
 
   // main-menu cheat-code input buffer
-  cheatBuffer: ''
+  cheatBuffer: '',
+  // separate from cheatBuffer above: that one only listens on the menu
+  // screen (for unlockall), this one listens during an active run too,
+  // since the whole point of godmode is testing deep into a run without
+  // dying, not from the main menu
+  godmodeCheatBuffer: '',
+  godmode: false
 };

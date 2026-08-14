@@ -7,7 +7,7 @@
 // does need revealed:true set explicitly or the boss is invisible and
 // untargetable (happened for real once, see the changelog)
 
-import { sfxBossAttack, sfxBossSpawn, sfxEnemyDeath, sfxExplosion, setMusicMode } from '../audio/sfx.js';
+import { sfxBossAttack, sfxBossEnrage, sfxBossMeleeImpact, sfxBossSpawn, sfxDiscovery, sfxEnemyDeath, sfxExplosion, setMusicMode } from '../audio/sfx.js';
 import { ARENA_H, ARENA_W, BOSS_EVERY, WIN_WAVE } from '../data/constants.js';
 import { BOSS_POOL, ENEMY_TYPES } from '../data/enemies.js';
 import { logEvent, showBossBanner } from '../render/hud.js';
@@ -20,7 +20,14 @@ import { spawnDamageText, spawnDeathBurst, triggerShake, triggerChroma, triggerH
 import { finishWave, triggerVictory } from './wave.js';
 import { clamp } from '../utils.js';
 
-export function unlockEnemy(id){ if (!store.compendium.enemies.includes(id)){ store.compendium.enemies.push(id); saveJSON(STORE_COMPENDIUM, store.compendium); } }
+export function unlockEnemy(id){
+  if (!store.compendium.enemies.includes(id)){
+    store.compendium.enemies.push(id);
+    saveJSON(STORE_COMPENDIUM, store.compendium);
+    const def = ENEMY_TYPES.find(e=>e.id===id);
+    if (def){ logEvent(`New enemy discovered: ${def.name}`); sfxDiscovery(); }
+  }
+}
 export function spawnRegular(type, xOverride, yOverride){
   const scale = 1 + (store.game.wave-1)*0.19;
   let x,y;
@@ -44,7 +51,7 @@ export function spawnRegular(type, xOverride, yOverride){
     hp, maxHp:hp, speed:type.speed,
     dmg:Math.round(type.dmg*scale*(isCursed?1.2:1))||1, ranged:!!type.ranged, boss:false, bomber:!!type.bomber,
     phasing:!!type.phasing, shielding:!!type.shielding, leech:!!type.leech, jammer:!!type.jammer,
-    totem:!!type.totem, mimic:!!type.mimic, awake:!type.mimic,
+    totem:!!type.totem, mimic:!!type.mimic, awake:!type.mimic, erratic:!!type.erratic,
     invisible:!!type.invisible, revealed:!type.invisible, splitsInto:type.splitsInto||null, splitCount:type.splitCount||0,
     armor:type.armor||0, gold:type.gold+(isCursed?1:0), flashTime:0, slowTimer:0, cursed:isCursed
   });
@@ -63,7 +70,7 @@ export function spawnBoss(def, loop){
   store.game.bossEnrageAt = store.game.waveTime + 40;
   showBossBanner(def.name);
   logEvent(`${def.name} has entered the arena!`);
-  sfxBossSpawn(); triggerShake(11,0.4); triggerChroma(); triggerFrameFlash('rgba(229,83,75,1)', 'rgba(229,83,75,0.7)', 0.7);
+  sfxBossSpawn(); triggerShake(13,0.4); triggerChroma(); triggerFrameFlash('rgba(229,83,75,1)', 'rgba(229,83,75,0.7)', 0.7);
   setMusicMode('boss');
 }
 export function isBossWaveNow(){ return (store.game.wave===WIN_WAVE) || (store.game.wave % BOSS_EVERY === 0); }
@@ -80,8 +87,8 @@ export function enrageBoss(){
   boss.speed *= 1.12;
   logEvent(`${boss.name} grows enraged from the drawn-out fight!`);
   triggerFrameFlash('rgba(255,45,85,1)', 'rgba(255,45,85,0.75)', 0.6);
-  triggerShake(9,0.3);
-  sfxBossAttack();
+  triggerShake(11,0.3);
+  sfxBossEnrage();
 }
 export function spawnEnemy(){
   const wave = store.game.wave;
@@ -111,11 +118,24 @@ export function fireAtPlayer(e, speed){
   const ang = Math.atan2(store.game.player.y-e.y, store.game.player.x-e.x);
   store.game.enemyProjectiles.push({x:e.x,y:e.y,vx:Math.cos(ang)*speed,vy:Math.sin(ang)*speed,dmg:e.dmg,life:2.5,radius:5,color:e.boss?'#ff5f8f':'#e5534b'});
 }
+/** Mirror's own signature attack: two projectiles fired at once, symmetric
+ * around the straight line to the player, instead of a single bolt. Gives
+ * it a genuine ranged threat of its own — before this, its entire kit was
+ * the periodic clone-spawn, with nothing to react to in between. Used by
+ * both the original and its clone, so a clone is a real second gun on the
+ * field, not just a second body with contact damage. */
+export function fireMirroredShot(e, speed){
+  const baseAng = Math.atan2(store.game.player.y-e.y, store.game.player.x-e.x);
+  const spread = 0.18;
+  for (const ang of [baseAng-spread, baseAng+spread]){
+    store.game.enemyProjectiles.push({x:e.x,y:e.y,vx:Math.cos(ang)*speed,vy:Math.sin(ang)*speed,dmg:Math.round(e.dmg*0.6),life:2.5,radius:5,color:'#9d7bf0'});
+  }
+}
 export function fireRing(e){
   const n=14;
   for (let i=0;i<n;i++){ const ang=(i/n)*Math.PI*2;
     store.game.enemyProjectiles.push({x:e.x,y:e.y,vx:Math.cos(ang)*170,vy:Math.sin(ang)*170,dmg:Math.round(e.dmg*0.55),life:3.2,radius:6,color:'#ff5f8f'}); }
-  sfxBossAttack(); triggerShake(6,0.2);
+  sfxBossAttack(); triggerShake(7,0.2);
 }
 export function summonAdds(e, typeId, count){
   const type = ENEMY_TYPES.find(t=>t.id===typeId);
@@ -130,9 +150,14 @@ export function handleBomber(e, spd, dt){
   const d = Math.hypot(p.x-e.x,p.y-e.y);
   if (d>1){ const ang=Math.atan2(p.y-e.y,p.x-e.x); e.x+=Math.cos(ang)*spd*dt; e.y+=Math.sin(ang)*spd*dt; }
   if (d<38){
+    // deliberately linear, not the standard 1+(wave-1)*0.19 multiplicative
+    // scaling every other enemy gets — a bomber is meant to stay a
+    // steady, always-manageable threat rather than escalate with the run,
+    // since its damage is a single unavoidable-if-you-let-it-close hit,
+    // not a repeated DPS source like everything else on the roster.
     applyDamageToPlayer(14+Math.round((store.game.wave-1)*0.3));
     spawnDeathBurst(e.x,e.y,'#ff7a3d',16);
-    triggerShake(7,0.25); sfxExplosion();
+    triggerShake(8,0.25); sfxExplosion();
     e.hp = -1;
   }
 }
@@ -142,6 +167,20 @@ export function handleRangedMovementAndFire(e, spd, dt){
   e.rangedTimer = (e.rangedTimer==null?2:e.rangedTimer) - dt;
   if (e.rangedTimer<=0 && dist<420){ e.rangedTimer=2.0; fireAtPlayer(e,220); }
   if (dist>190){ const ang=Math.atan2(p.y-e.y,p.x-e.x); e.x+=Math.cos(ang)*spd*dt; e.y+=Math.sin(ang)*spd*dt; }
+}
+/** Sprinter and Wraith both promised "erratic"/"unpredictable" movement in
+ * their own flavor text, but were coded as plain straight-line chasers —
+ * shape:'erratic' only ever affected how they're drawn, never how they
+ * move. This actually delivers on that: a randomized angular offset from
+ * the direct line to the player, re-rolled every 0.3-0.6s, so the path
+ * weaves rather than beelines, while still averaging toward the player
+ * over time since the offset is centered at zero. */
+export function handleErraticMovement(e, spd, dt){
+  const p = store.game.player;
+  e.wobbleTimer = (e.wobbleTimer==null?0:e.wobbleTimer) - dt;
+  if (e.wobbleTimer<=0){ e.wobbleTimer = 0.3+Math.random()*0.3; e.wobbleOffset = (Math.random()-0.5)*1.4; }
+  const ang = Math.atan2(p.y-e.y,p.x-e.x) + (e.wobbleOffset||0);
+  e.x += Math.cos(ang)*spd*dt; e.y += Math.sin(ang)*spd*dt;
 }
 export function handleSpecialTimers(e, dt){
   if (e.phasing){
@@ -203,9 +242,15 @@ export function handleBossBehavior(e, dt, spd){
     if (e.slamTimer<=0){
       e.slamTimer = e.id==='finalboss'?6:5;
       const d = Math.hypot(p.x-e.x,p.y-e.y);
-      if (d<=95) { applyDamageToPlayer(e.id==='finalboss'?30:26); triggerShake(14,0.35); triggerChroma(); triggerHitStop(0.07); triggerFrameFlash('rgba(229,83,75,1)', 'rgba(229,83,75,0.6)', 0.45); }
-      spawnDeathBurst(e.x,e.y,'#ffffff',14);
-      sfxBossAttack();
+      // used to flash generic danger-red and burst plain white, unlike
+      // Butcher's charge and Mirror's clone-split which both flash in
+      // their own signature color — the single biggest hit in the game
+      // had the least distinctive treatment of any boss's signature
+      // attack. Uses e.color dynamically since this same block serves
+      // both The Colossus and The Devourer.
+      if (d<=95) { applyDamageToPlayer(e.id==='finalboss'?30:26); triggerShake(17,0.35); triggerChroma(); triggerHitStop(0.07); triggerFrameFlash(e.color, e.color+'99', 0.45); }
+      spawnDeathBurst(e.x,e.y,e.color,14);
+      sfxBossMeleeImpact();
     }
   }
   if (e.id==='finalboss'){
@@ -228,7 +273,7 @@ export function handleBossBehavior(e, dt, spd){
       if (e.charging<=0){
         const ang = Math.atan2((e.chargeTY??p.y)-e.y, (e.chargeTX??p.x)-e.x);
         e.dashVX = Math.cos(ang)*620; e.dashVY = Math.sin(ang)*620; e.dashTime = 0.3;
-        triggerShake(8,0.2);
+        triggerShake(10,0.2);
       }
     } else {
       e.chargeTimer = (e.chargeTimer==null?4:e.chargeTimer) - dt;
@@ -240,12 +285,20 @@ export function handleBossBehavior(e, dt, spd){
     }
     if (e.dashTime>0){
       const d = Math.hypot(p.x-e.x,p.y-e.y);
-      if (d < e.radius+p.radius+6){ applyDamageToPlayer(Math.round(e.dmg*1.1)); e.dashTime=0; triggerShake(10,0.25); }
+      if (d < e.radius+p.radius+6){ applyDamageToPlayer(Math.round(e.dmg*1.1)); e.dashTime=0; triggerShake(12,0.25); sfxBossMeleeImpact(); }
     }
   }
   if (e.id==='swarmqueen'){
-    e.birthTimer = (e.birthTimer==null?2.5:e.birthTimer) - dt;
-    if (e.birthTimer<=0 && store.game.enemies.length<46){ e.birthTimer=2.5; summonAdds(e,'swarmling',2); }
+    // spawning 2 every 2.5s with no ceiling on how many could pile up meant
+    // a player who couldn't clear them as fast as they arrived just kept
+    // falling further behind, permanently stuck on crowd control and never
+    // getting a real window to hit the queen herself. Slower interval plus
+    // a real cap on how many of HER swarmlings can be alive at once gives
+    // genuine breathing room back, while the "ignore them and she heals"
+    // tension below still holds if you let even a few survive.
+    e.birthTimer = (e.birthTimer==null?4:e.birthTimer) - dt;
+    const aliveFromHer = store.game.enemies.filter(o=>o.id==='swarmling' && o.hp>0 && !o.boss).length;
+    if (e.birthTimer<=0 && store.game.enemies.length<46 && aliveFromHer<8){ e.birthTimer=4; summonAdds(e,'swarmling',2); }
     e.pulseTimer = (e.pulseTimer==null?8:e.pulseTimer) - dt;
     if (e.pulseTimer<=0){
       e.pulseTimer = 8;
@@ -279,6 +332,12 @@ export function handleBossBehavior(e, dt, spd){
       triggerFrameFlash('rgba(157,123,240,1)', 'rgba(157,123,240,0.6)', 0.4);
     }
   }
+  if (e.id==='mirror'){
+    // fires from both the original and any clone — a clone is now a real
+    // second gun on the field, not just a second body with contact damage
+    e.mirrorShotTimer = (e.mirrorShotTimer==null?3.5:e.mirrorShotTimer) - dt;
+    if (e.mirrorShotTimer<=0){ e.mirrorShotTimer = 3.5; fireMirroredShot(e, 210); }
+  }
   if (e.id==='hollowking'){
     const dist = Math.hypot(p.x-e.x,p.y-e.y);
     const cursedBonus = Math.min(1, (p.cursedStat||0)/50);
@@ -288,13 +347,20 @@ export function handleBossBehavior(e, dt, spd){
       p.x += Math.cos(pullAng)*pullStrength*dt; p.y += Math.sin(pullAng)*pullStrength*dt;
     }
     e.voidTimer = (e.voidTimer==null?6:e.voidTimer) - dt;
+    // the void pulse used to deal damage and show its warning at the exact
+    // same instant — no way to see it coming before it already hit, unlike
+    // every other big boss hit in the game (Butcher's charge windup,
+    // Colossus's slam ring). e.voidCharging drives a matching telegraph
+    // in render/canvas.js for the 0.8s before it actually fires.
+    e.voidCharging = e.voidTimer <= 0.8 && e.voidTimer > 0;
     if (e.voidTimer<=0){
       e.voidTimer = 6;
+      e.voidCharging = false;
       if (dist<300){
         applyDamageToPlayer(Math.round(e.dmg*(0.6+cursedBonus*0.5)));
         spawnDamageText(p.x,p.y-30,'VOID PULSE','#c07dff',true);
         triggerFrameFlash('rgba(42,18,64,1)', 'rgba(120,60,180,0.7)', 0.5);
-        triggerShake(9,0.25);
+        triggerShake(11,0.25);
       }
     }
   }
@@ -320,10 +386,16 @@ export function updateEnemies(dt){
     }
     else if (e.boss){ handleBossBehavior(e,dt,spd); }
     else if (e.ranged){ handleRangedMovementAndFire(e,spd,dt); }
+    else if (e.erratic){ handleErraticMovement(e,spd,dt); }
     else { const ang=Math.atan2(p.y-e.y,p.x-e.x); e.x+=Math.cos(ang)*spd*dt; e.y+=Math.sin(ang)*spd*dt; }
 
     const d2 = Math.hypot(p.x-e.x,p.y-e.y);
-    if (d2 < p.radius+e.radius){
+    // a phased Phantom can't be hit by the player at all (see combat.js's
+    // e.phased checks) — it used to still deal full contact damage during
+    // that same window regardless, untouchable but not harmless, which
+    // reads as unfair rather than as the "ghostly, out of phase" idea the
+    // mechanic is going for. Phased out means phased out both ways.
+    if (d2 < p.radius+e.radius && !e.phased){
       const dealt = applyDamageToPlayer(e.dmg);
       if (dealt && e.leech){
         const stolen = Math.min(store.game.gold, 2+Math.floor(store.game.wave*0.15));
@@ -351,7 +423,23 @@ export function updateEnemyProjectiles(dt){
 }
 export function killEnemy(e){
   store.game.kills += 1;
-  if (e.gold>0 && (e.boss || e.gold>1 || Math.random()<0.7)){
+  // Non-boss kills during a boss wave used to pay full gold with zero time
+  // limit — a build that could dodge both the boss and the ambient spawns
+  // could fill the entire gold cap from regular kills alone in well under
+  // a minute, with no real reason to ever engage the boss. Cutting the
+  // effective gold value by 80% during an active boss fight keeps the
+  // enemies as a genuine threat during the fight without them being a
+  // risk-free farm to stall the boss forever.
+  //
+  // This reduces the DROP CHANCE rather than rounding the drop VALUE down,
+  // specifically because gold values here are tiny integers (1-3) — an
+  // 80% cut applied by rounding would zero out gold=1 and gold=2 enemies
+  // entirely while gold=3 enemies still dropped something, an inconsistent
+  // result that has nothing to do with the intended 80% reduction.
+  const farming = !e.boss && isBossWaveNow() && store.game.bossSpawned;
+  const baseDropChance = e.gold>1 ? 1 : 0.7;
+  const dropChance = farming ? baseDropChance*0.2 : baseDropChance;
+  if (e.gold>0 && Math.random()<dropChance){
     store.game.coins.push({x:e.x,y:e.y,value:e.gold,vx:(Math.random()-0.5)*50,vy:(Math.random()-0.5)*50});
   }
   // a cursed enemy leaves a lingering hazard when it dies, punishes

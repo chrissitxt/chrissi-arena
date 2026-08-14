@@ -37,6 +37,10 @@ export function updateSettingButtons(){
   document.querySelectorAll('.fps-opt').forEach(b => { b.classList.toggle('active', parseInt(b.dataset.fps,10) === store.settings.fps); b.disabled = !!store.settings.vsyncOn; });
   document.querySelectorAll('.toggle-opt[data-toggle]').forEach(b => b.classList.toggle('active', (b.dataset.val==='true') === !!store.settings[b.dataset.toggle]));
   document.querySelectorAll('.toggle-opt[data-uiscale]').forEach(b => b.classList.toggle('active', b.dataset.uiscale === store.settings.uiSize));
+  const musicSlider = document.getElementById('musicVolumeSlider');
+  const sfxSlider = document.getElementById('sfxVolumeSlider');
+  if (musicSlider){ musicSlider.value = store.settings.musicVolume; document.getElementById('musicVolumeLabel').textContent = String(store.settings.musicVolume); }
+  if (sfxSlider){ sfxSlider.value = store.settings.sfxVolume; document.getElementById('sfxVolumeLabel').textContent = String(store.settings.sfxVolume); }
 }
 export function checkDesktop(){
   const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
