@@ -563,3 +563,67 @@ describe('active wave events show up in the stat breakdown (regression: recomput
     expect(totalMatch[1]).toBe(displayed);
   });
 });
+
+describe('the nine previously-invisible stats (pierce, projectiles, regen, orbit blades, slow chance, chain jumps, explosive level, bombs per drop, berserker bonus) now show on the panel once relevant, and stay hidden otherwise (regression: none of these had any visibility anywhere in the game before this, not the panel, not a tooltip, nothing)', () => {
+  const cases = [
+    ['impalerslance', 'pierce', 'statPierce', '3'],
+    ['twin', 'projectileCount', 'statProjectiles', '2'],
+    ['bandage', 'regen', 'statRegen', '0.3/s'],
+    ['whirlingblades', 'orbitCount', 'statOrbit', '1'],
+    ['frost', 'frostChance', 'statFrost', '17%'],
+    ['chain', 'chainCount', 'statChain', '1'],
+    ['explosive', 'explosiveLevel', 'statExplosive', '1'],
+    ['stickycharges', 'bombDropLevel', 'statBombs', '1'],
+    ['berserker', 'berserkerBonus', 'statBerserker', '+15% <50% hp'],
+  ];
+
+  it.each(cases)('%s makes its row visible with the right value', async (itemId, key, elId, expected) => {
+    const { store } = await import('../src/state/store.js');
+    const { newGameState } = await import('../src/state/gameState.js');
+    const { updateHUD } = await import('../src/render/hud.js');
+    store.game = newGameState();
+    const item = ITEMS.find(i => i.id === itemId);
+    item.apply(store.game.player);
+    store.game.ownedItems = [{ item, applyCount: 1 }];
+    updateHUD();
+    const row = document.getElementById(elId).closest('.stat-row-extra');
+    expect(row.classList.contains('hidden')).toBe(false);
+    expect(document.getElementById(elId).textContent).toBe(expected);
+  });
+
+  it('all nine stay hidden on a build that owns none of the relevant items', async () => {
+    const { store } = await import('../src/state/store.js');
+    const { newGameState } = await import('../src/state/gameState.js');
+    const { updateHUD } = await import('../src/render/hud.js');
+    store.game = newGameState();
+    updateHUD();
+    expect(document.querySelectorAll('.stat-row-extra.hidden').length).toBe(9);
+  });
+
+  it('the hover breakdown tooltip works correctly for a newly-visible stat, including stacked copies', async () => {
+    const { store } = await import('../src/state/store.js');
+    const { newGameState } = await import('../src/state/gameState.js');
+    const { showStatTooltip } = await import('../src/render/hud.js');
+    const { tooltipEl } = await import('../src/dom.js');
+    store.game = newGameState();
+    const explosive = ITEMS.find(i => i.id === 'explosive');
+    explosive.apply(store.game.player);
+    explosive.apply(store.game.player);
+    store.game.ownedItems = [{ item: explosive, applyCount: 2 }];
+    showStatTooltip({ clientX: 0, clientY: 0 }, 'explosiveLevel');
+    expect(tooltipEl.innerHTML).toContain('<span>Base</span><span>0</span>');
+    expect(tooltipEl.innerHTML).toContain('Explosive Tips');
+    expect(tooltipEl.innerHTML).toContain('+2');
+  });
+
+  it('the shop buy-preview shows these stats too, including the non-zero base case (Projectiles starts at 1, not 0)', async () => {
+    const { store } = await import('../src/state/store.js');
+    const { newGameState } = await import('../src/state/gameState.js');
+    const { showItemTooltip } = await import('../src/render/shop.js');
+    const { tooltipEl } = await import('../src/dom.js');
+    store.game = newGameState();
+    const twin = ITEMS.find(i => i.id === 'twin');
+    showItemTooltip({ clientX: 0, clientY: 0 }, twin, 1, 14, false);
+    expect(tooltipEl.innerHTML).toContain('1 \u2192 2');
+  });
+});

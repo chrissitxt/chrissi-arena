@@ -146,6 +146,30 @@ describe('Mirror clone (regression-proofing a brand new interaction: a clone dyi
     handleBossBehavior(clone, 0.1, clone.speed); // run behavior on the CLONE
     expect(store.game.enemies.length).toBe(countAfterReal); // no further clone was spawned
   });
+
+  it('never lets more than 3 clones be alive at once, even given an unlimited amount of time with zero player intervention (regression: same problem Swarm Queen had, nothing capped it besides the shared global 46-enemy population cap, so clones just piled up forever near wherever the original had been)', () => {
+    const def = ENEMY_TYPES.find(e => e.id === 'mirror');
+    const mirror = { ...def, boss:true, isClone:false, x:0, y:0, splitTimer:0, hp:def.hp, maxHp:def.hp };
+    store.game.player.x = 500; store.game.player.y = 500;
+    store.game.enemies = [mirror];
+    for (let i=0;i<1800;i++) handleBossBehavior(mirror, 0.1, mirror.speed); // 3 simulated minutes
+    const clones = store.game.enemies.filter(e => e.id==='mirror' && e.isClone);
+    expect(clones.length).toBeLessThanOrEqual(3);
+  });
+
+  it('resumes spawning clones once the alive count drops back below the cap', () => {
+    const def = ENEMY_TYPES.find(e => e.id === 'mirror');
+    const mirror = { ...def, boss:true, isClone:false, x:0, y:0, splitTimer:0, hp:def.hp, maxHp:def.hp };
+    store.game.player.x = 500; store.game.player.y = 500;
+    store.game.enemies = [mirror];
+    for (let i=0;i<1800;i++) handleBossBehavior(mirror, 0.1, mirror.speed);
+    expect(store.game.enemies.filter(e => e.isClone).length).toBe(3);
+    // clear them all out, as if the player actually killed every one
+    store.game.enemies = store.game.enemies.filter(e => !e.isClone);
+    mirror.splitTimer = 0;
+    handleBossBehavior(mirror, 0.1, mirror.speed);
+    expect(store.game.enemies.filter(e => e.isClone).length).toBeGreaterThan(0);
+  });
 });
 
 describe("Mirror's twin-shot (regression: its entire kit used to be the clone-spawn, nothing to react to in between)", () => {

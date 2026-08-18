@@ -23,7 +23,22 @@ export const BREAKDOWN_STAT_KEYS = [
   { key: 'dodgeChance', label: 'Dodge Chance' },
   { key: 'pickupRadius', label: 'Pickup Range' },
   { key: 'goldMult', label: 'Gold Gain' },
-  { key: 'cursedStat', label: 'Cursed' }
+  { key: 'cursedStat', label: 'Cursed' },
+  // these nine used to have zero visibility anywhere in the game — no
+  // panel row, no tooltip, nothing. Owning e.g. two copies of Explosive
+  // Tips meant doing the stacking math yourself from memory, and some of
+  // these (Explosive Tips, Sticky Charges) don't even stack linearly, so
+  // there was no way to know the real number at all short of reading the
+  // source. Only shown on the panel when non-default, see hud.js.
+  { key: 'pierce', label: 'Pierce' },
+  { key: 'projectileCount', label: 'Projectiles' },
+  { key: 'regen', label: 'Regen' },
+  { key: 'orbitCount', label: 'Orbit Blades' },
+  { key: 'frostChance', label: 'Slow Chance' },
+  { key: 'chainCount', label: 'Chain Jumps' },
+  { key: 'explosiveLevel', label: 'Explosive Level' },
+  { key: 'bombDropLevel', label: 'Bombs Per Drop' },
+  { key: 'berserkerBonus', label: 'Berserker Bonus' }
 ];
 
 // ownedItems is the same shape as store.game.ownedItems: a list of

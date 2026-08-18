@@ -4,6 +4,14 @@
 // describe what they do. that's for players to find out
 
 export const CHANGELOG = [
+  { version:'0.4.4-beta', date:'18. August 2026', notes:[
+    "Smaller update, just bug fixes and some cleanup before I slow down for a while.",
+    "The Mirror was spawning clones way too fast to keep up with, same problem The Swarm Queen had a couple versions back. Capped it so it can't pile up on you anymore.",
+    "A bunch of item effects had zero way to actually see them: pierce, extra projectiles, HP regen, orbiting blades, slow chance, chain lightning jumps, explosion strength, bomb count, and the berserker damage bonus. You just had to trust they were working. All nine now show up on your stats panel once you actually own something that uses them, with the same hover breakdown every other stat already has.",
+    "That same info now also shows up on the death and victory recap screens, which used to just leave all of it off entirely.",
+    "Cleaned up some old unused code lying around.",
+    "Heads up: I start school again in about two weeks, so updates are going to slow way down after this one. I'll still be working on the game in the background, thinking through ideas, testing stuff, just not shipping much for a while. Realistically the next real update is December. This project isn't dead, I'm just a student first.",
+  ] },
   { version:'0.4.3-beta', date:'14. August 2026', notes:[
     "Third round of polish, this time going through every sound and visual effect in the game one by one.",
     "Added a real low HP warning. Below 25% HP your health bar pulses, the screen edges glow red, and you'll hear a heartbeat that speeds up the closer you get to dying. Before this there was basically nothing.",

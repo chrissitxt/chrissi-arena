@@ -15,7 +15,6 @@ import { store } from '../state/store.js';
 import { STORE_COMPENDIUM, saveJSON } from '../storage.js';
 import { unlockAchievement } from './achievements.js';
 import { applyDamageToPlayer } from './combat.js';
-import { loop } from './loop.js';
 import { spawnDamageText, spawnDeathBurst, triggerShake, triggerChroma, triggerHitStop, triggerFrameFlash } from './particles.js';
 import { finishWave, triggerVictory } from './wave.js';
 import { clamp } from '../utils.js';
@@ -320,7 +319,15 @@ export function handleBossBehavior(e, dt, spd){
   }
   if (e.id==='mirror' && !e.isClone){
     e.splitTimer = (e.splitTimer==null?10:e.splitTimer) - dt;
-    if (e.splitTimer<=0 && store.game.enemies.length<46){
+    // same problem Swarm Queen had: nothing capped how many of ITS OWN
+    // clones could be alive at once, only the global 46-enemy population
+    // cap, shared with every other spawn on the field. A player who fell
+    // behind on clones just kept accumulating more, clumping up near
+    // wherever the original had been (clones spawn at a fixed offset from
+    // it), turning a "duplicate boss fight" into an uncapped swarm — not
+    // what the mirror/duplicate theme was going for.
+    const aliveClones = store.game.enemies.filter(o=>o.id==='mirror' && o.isClone && o.hp>0).length;
+    if (e.splitTimer<=0 && store.game.enemies.length<46 && aliveClones<3){
       e.splitTimer = 10;
       const cloneHp = Math.round(e.maxHp*0.35);
       store.game.enemies.push({

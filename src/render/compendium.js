@@ -7,7 +7,6 @@ import { ENEMY_TYPES } from '../data/enemies.js';
 import { EVENTS } from '../data/events.js';
 import { GUIDE_SECTIONS } from '../data/guide.js';
 import { ITEMS, RARITY_ORDER } from '../data/items.js';
-import { canvas } from '../dom.js';
 import { drawEnemyShape } from './canvas.js';
 import { showScreen } from './screens.js';
 import { store } from '../state/store.js';

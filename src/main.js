@@ -5,7 +5,7 @@ import './style.css';
 
 import { initAudioOnce, sfxAchievement, sfxUIClick, startMusic, stopMusic, sfxDenied, setMusicMode } from './audio/sfx.js';
 import { ACHIEVEMENTS } from './data/achievements.js';
-import { ARENA_H, ARENA_W, GAME_VERSION, WIN_WAVE } from './data/constants.js';
+import { ARENA_H, ARENA_W, GAME_VERSION } from './data/constants.js';
 import { ENEMY_TYPES } from './data/enemies.js';
 import { EVENTS } from './data/events.js';
 import { ITEMS } from './data/items.js';
@@ -21,7 +21,7 @@ import { buildSnapshot, openShop, rerollUnlockedOffers } from './systems/economy
 import { scheduleNextFrame } from './systems/loop.js';
 import { quitToMenu, resumeGame, startRun } from './systems/run.js';
 import { exportSave, importSaveFile } from './systems/saveFile.js';
-import { continueEndless, recenterPlayer, triggerVictory } from './systems/wave.js';
+import { continueEndless, recenterPlayer } from './systems/wave.js';
 import { migrateAudioSettings, waveDurationFor } from './utils.js';
 
 const CHEAT_CODE = 'unlockall';
