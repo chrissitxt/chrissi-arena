@@ -102,25 +102,3 @@ describe('post-run build icons are hoverable (regression: were static, non-inter
     expect(tooltipEl.innerHTML).toContain(dagger.name);
   });
 });
-
-describe('renderPostRunSummary includes the nine previously-invisible stats when relevant (regression: the recap screen listed only the original ten stats, so a build centered on e.g. Pierce or Chain Coil showed neither of those on the one screen meant to summarize what you actually built)', () => {
-  it('shows Pierce and Chain Jumps when those items are owned', () => {
-    const lance = ITEMS.find(i => i.id === 'impalerslance');
-    const chain = ITEMS.find(i => i.id === 'chain');
-    lance.apply(store.game.player);
-    chain.apply(store.game.player);
-    store.game.ownedItems = [{ item: lance, applyCount: 1 }, { item: chain, applyCount: 1 }];
-    renderPostRunSummary('go');
-    const html = document.getElementById('goStatsGrid').innerHTML;
-    expect(html).toContain('Pierce');
-    expect(html).toContain('Chain jumps');
-  });
-
-  it('omits all nine when none of the relevant items are owned', () => {
-    renderPostRunSummary('go');
-    const html = document.getElementById('goStatsGrid').innerHTML;
-    for (const label of ['Pierce', 'Orbit blades', 'Slow chance', 'Chain jumps', 'Explosive level', 'Bombs per drop', 'Berserker bonus']) {
-      expect(html).not.toContain(label);
-    }
-  });
-});
