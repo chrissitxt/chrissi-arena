@@ -237,7 +237,20 @@ export function renderPostRunSummary(prefix){
     ['Crit damage', 'x'+(Math.round(p.critMult*100)/100)],
     ['Lifesteal', fmtPct(Math.min(lifestealCap(),p.lifesteal))],
     ['Dodge', fmtPct(Math.min(dodgeCap(),p.dodgeChance))],
-    ['Pickup range', Math.round(p.pickupRadius)]
+    ['Pickup range', Math.round(p.pickupRadius)],
+    // same nine stats that only show up on the live left panel once
+    // relevant — this recap screen used to just drop them entirely, so
+    // a run built around e.g. Chain Coil and Impaler's Lance showed
+    // neither of those on the one screen meant to summarize the build
+    ...(p.pierce>0 ? [['Pierce', p.pierce]] : []),
+    ...(p.projectileCount!==1 ? [['Projectiles', p.projectileCount]] : []),
+    ...(p.regen>0 ? [['Regen', p.regen.toFixed(1)+'/s']] : []),
+    ...((p.orbitCount||0)>0 ? [['Orbit blades', p.orbitCount]] : []),
+    ...(p.frostChance>0 ? [['Slow chance', fmtPct(p.frostChance)]] : []),
+    ...(p.chainCount>0 ? [['Chain jumps', p.chainCount]] : []),
+    ...(p.explosiveLevel>0 ? [['Explosive level', p.explosiveLevel]] : []),
+    ...((p.bombDropLevel||0)>0 ? [['Bombs per drop', p.bombDropLevel]] : []),
+    ...(p.berserkerBonus>0 ? [['Berserker bonus', '+'+fmtPct(p.berserkerBonus)+' <50% hp']] : []),
   ].map(([label,val]) => `<div class="stat-row-sm"><span class="lbl">${label}</span><span>${val}</span></div>`).join('');
   const statsEl = document.getElementById(prefix+'StatsGrid');
   if (statsEl) statsEl.innerHTML = statsHtml;

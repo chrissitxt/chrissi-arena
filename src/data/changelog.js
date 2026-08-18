@@ -4,6 +4,14 @@
 // describe what they do. that's for players to find out
 
 export const CHANGELOG = [
+  { version:'0.4.4-beta', date:'15. August 2026', notes:[
+    "Smaller update, just bug fixes and some cleanup before I slow down for a while.",
+    "The Mirror was spawning clones way too fast to keep up with, same problem The Swarm Queen had a couple versions back. Capped it so it can't pile up on you anymore.",
+    "A bunch of item effects had zero way to actually see them: pierce, extra projectiles, HP regen, orbiting blades, slow chance, chain lightning jumps, explosion strength, bomb count, and the berserker damage bonus. You just had to trust they were working. All nine now show up on your stats panel once you actually own something that uses them, with the same hover breakdown every other stat already has.",
+    "That same info now also shows up on the death and victory recap screens, which used to just leave all of it off entirely.",
+    "Cleaned up some old unused code lying around.",
+    "Heads up: I start school again in about two weeks, so updates are going to slow way down after this one. I'll still be working on the game in the background, thinking through ideas, testing stuff, just not shipping much for a while. Realistically the next real update is December. This project isn't dead, I'm just a student first.",
+  ] },
   { version:'0.4.3-beta', date:'14. August 2026', notes:[
     "Third round of polish, this time going through every sound and visual effect in the game one by one.",
     "Added a real low HP warning. Below 25% HP your health bar pulses, the screen edges glow red, and you'll hear a heartbeat that speeds up the closer you get to dying. Before this there was basically nothing.",
@@ -20,7 +28,7 @@ export const CHANGELOG = [
     "Replaced the music and sound on/off switches with volume sliders, 0 to 5. Old saves with sound turned off carry over correctly instead of resetting to full volume.",
     "Cleaned up the Settings screen into clear sections.",
   ] },
-  { version:'0.4.2-beta', date:'12. August 2026', notes:[
+  { version:'0.4.2-beta', date:'13. August 2026', notes:[
     "Second round of polish, this time on how bosses and enemies actually behave, not just their stats.",
     "The Swarm Queen was spawning adds so fast you could never get a real hit in on her. Slowed it down and capped how many can be alive at once.",
     "The Hollow King's Void Pulse used to hit you with zero warning. Now it telegraphs first, like The Colossus's slam already does.",
@@ -30,7 +38,7 @@ export const CHANGELOG = [
     'Rewrote the whole Guide tab to be clearer, and fixed a genuine mistake in how it explained Lifesteal.',
     "Rewrote the whole Roadmap, including where this game actually came from and what it would really take to get it on Steam.",
   ] },
-  { version:'0.4.1-beta', date:'10. August 2026', notes:[
+  { version:'0.4.1-beta', date:'13. August 2026', notes:[
     'First round of balance work, going through items and enemies one by one with real numbers instead of guessing. More of this coming.',
     'Rerolling the shop used to get insanely expensive late game, almost 85% of your entire gold cap for one reroll by wave 30. Capped it at 8 gold.',
     'You could dodge a boss forever and just farm the regular enemies around it for free gold. Cut that gold by 80% while a boss fight is active. The boss itself still pays full, normal waves are not affected.',

@@ -1,4 +1,17 @@
 node_modules/
 dist/
-*.local
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# editor/OS
+.vscode/
+.idea/
 .DS_Store
+Thumbs.db
+
+# env files, just in case any get created locally
+.env
+.env.local
